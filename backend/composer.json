@@ -5,7 +5,7 @@
     "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
-     "require": {
+    "require": {
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-curl": "*",
@@ -107,7 +107,9 @@
         ],
         "serve": "php -S localhost:8000 -t public/",
         "clear_cache": "php bin/console cache:clear",
-        "app:stan":["./vendor/bin/phpstan analyse --memory-limit=-1"],
+        "app:stan": [
+            "./vendor/bin/phpstan analyse --memory-limit=-1"
+        ],
         "app:code-quality": [
             "./vendor/bin/ecs check --fix",
             "bin/console lint:yaml config --parse-tags",
@@ -131,8 +133,6 @@
         "test:unit": "APP_ENV=test bin/phpunit tests/Unit/",
         "test:integration": "APP_ENV=test bin/phpunit tests/Integration/",
         "test:e2e": "APP_ENV=test bin/phpunit tests/E2E/",
-       
-        
         "test": "bin/phpunit"
     },
     "conflict": {
