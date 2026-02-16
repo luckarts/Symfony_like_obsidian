@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo "🔍 Validation du projet..."
+
+# 1. Container
+php bin/console lint:container || exit 1
+
+# 2. YAML
+php bin/console lint:yaml config/ || exit 1
+
+# 3. Doctrine
+php bin/console doctrine:schema:validate --skip-sync
+
+echo "✅ Projet validé"

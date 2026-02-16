@@ -1,0 +1,18 @@
+grumphp:
+  hooks_dir: ~
+  hooks_preset: local
+  stop_on_failure: true
+  git_hook_variables:
+    SHELL_PATH: /bin/sh
+  tasks:
+    git_blacklist:
+      keywords:
+        - "<<<<<<< "
+        - ">>>>>>> "
+      triggered_by: ['php', 'yaml', 'yml', 'xml', 'json', 'twig', 'js', 'ts', 'css', 'html']
+      regexp_type: G
+      ignore_patterns:
+        - grumphp.yml
+    phpstan:
+      configuration: phpstan.dist.neon
+      memory_limit: "-1"

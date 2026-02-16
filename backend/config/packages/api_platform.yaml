@@ -1,0 +1,6 @@
+api_platform:
+    defaults:
+        stateless: true
+
+    mapping:
+        paths: []
