@@ -81,3 +81,124 @@ jobs:
       - name: PHPStan
         # --error-format=github : affiche les erreurs comme annotations PR dans GitHub
         run: vendor/bin/phpstan analyse --error-format=github --no-progress --memory-limit=-1
+
+  # ── Découverte des suites E2E ── détermine quels BCs sont affectés par la PR
+  generate-matrix:
+    name: Discover E2E suites
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'pull_request'
+    outputs:
+      suites: ${{ steps.set-matrix.outputs.suites }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 0  # nécessaire pour git diff entre base et head
+
+      - name: Discover suites from tests/E2E/
+        id: set-matrix
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
+
+          # Si infra modifiée (composer, migrations, config) → tout relancer
+          ALL=false
+          if echo "$CHANGED" | grep -qE "(composer\.lock|composer\.json|migrations/|config/|\.env)"; then
+            ALL=true
+          fi
+
+          suites=()
+          for dir in backend/tests/E2E/*/; do
+            [ -d "$dir" ] || continue
+            name=$(basename "$dir")
+            [[ "$name" == "Trait" ]] && continue
+            lower=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+            if [[ "$ALL" == "true" ]] || \
+               echo "$CHANGED" | grep -qiE "(backend/src/$name/|backend/tests/E2E/$name/)"; then
+              suites+=("$lower")
+            fi
+          done
+
+          if [ ${#suites[@]} -eq 0 ]; then
+            echo "Aucune suite E2E affectée — skipping"
+            echo "suites=[]" >> $GITHUB_OUTPUT
+          else
+            json=$(printf '%s\n' "${suites[@]}" | jq -Rsc 'split("\n")[:-1]')
+            echo "suites=$json" >> $GITHUB_OUTPUT
+          fi
+
+  # ── Tests E2E ── parallèle par BC, nécessite PostgreSQL, ~2min par suite ──
+  e2e:
+    name: E2E (${{ matrix.suite }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [unit, generate-matrix]
+    # Lance uniquement si generate-matrix a trouvé des suites à tester
+    if: github.event_name == 'pull_request' && needs.generate-matrix.outputs.suites != '[]'
+    defaults:
+      run:
+        working-directory: backend
+    strategy:
+      fail-fast: false  # un BC qui échoue ne bloque pas les autres
+      matrix:
+        suite: ${{ fromJson(needs.generate-matrix.outputs.suites) }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_DB=app -e POSTGRES_USER=app -e POSTGRES_PASSWORD=test \
+            -p 5432:5432 postgres:16-alpine
+          until docker exec postgres pg_isready -U app; do sleep 1; done
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Setup test database
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+          php bin/console doctrine:schema:create --env=test --no-interaction
+
+      - name: E2E — ${{ matrix.suite }}
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+          SUITE: ${{ matrix.suite }}
+        run: php bin/phpunit --testsuite E2E --group "$SUITE" --no-coverage
+
+  # ── Agrégateur ── nom stable pour la branch protection rule ───────────────
+  # Nécessaire car le job e2e a un nom dynamique (matrix) qui change selon les suites
+  e2e-success:
+    name: E2E passed
+    runs-on: ubuntu-latest
+    permissions: {}
+    needs: e2e
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - name: Check E2E result
+        run: |
+          result="${{ needs.e2e.result }}"
+          if [[ "$result" == "success" || "$result" == "skipped" ]]; then
+            echo "E2E passed (result: $result)"
+          else
+            echo "E2E failed (result: $result)"
+            exit 1
+          fi
