@@ -160,6 +160,22 @@ jobs:
           key: composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: composer-
 
+      # Cache de l'image Docker PostgreSQL — évite un pull (~50MB) à chaque run
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-postgres-16-alpine
+
+      - name: Load or pull PostgreSQL image
+        run: |
+          if [ -f /tmp/docker-cache/postgres.tar ]; then
+            docker load < /tmp/docker-cache/postgres.tar
+          else
+            docker pull postgres:16-alpine
+            mkdir -p /tmp/docker-cache
+            docker save postgres:16-alpine -o /tmp/docker-cache/postgres.tar
+          fi
+
       - name: Start PostgreSQL
         run: |
           docker run -d --name postgres \
