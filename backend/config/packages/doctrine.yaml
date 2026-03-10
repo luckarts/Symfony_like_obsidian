@@ -5,10 +5,14 @@ doctrine:
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)
 <<<<<<< HEAD
+<<<<<<< HEAD
         server_version: '16'
 =======
         #server_version: '16'
 >>>>>>> 874d6ff (init project)
+=======
+        server_version: '16'
+>>>>>>> ed4f6b3 (ci: add test.yml — basic structure)
 
         profiling_collect_backtrace: '%kernel.debug%'
     orm:
