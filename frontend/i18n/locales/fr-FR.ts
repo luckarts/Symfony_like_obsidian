@@ -19,5 +19,21 @@ export default {
     confirmPassword: 'Confirmer le mot de passe',
     forgotPassword: 'Mot de passe oublié ?',
   },
-  
+  nav: {
+    dashboard: 'Tableau de bord',
+    projects: 'Projets',
+  },
+  user: {
+    settings: 'Paramètres',
+    lightMode: 'Mode clair',
+    darkMode: 'Mode sombre',
+  },
+  sidebar: {
+    brand: 'TaskManager',
+  },
+  dashboard: {
+    greeting: 'Bonjour, {name}',
+    recentProjects: 'Mes projets récents',
+    noProjects: 'Aucun projet pour le moment.',
+  },
 }

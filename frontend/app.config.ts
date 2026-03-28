@@ -5,4 +5,7 @@ export default defineAppConfig({
       neutral: 'slate',
     },
   },
+  icon: {
+    collections: ['heroicons'],
+  },
 })

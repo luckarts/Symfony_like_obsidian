@@ -1,9 +1,10 @@
 <script setup lang="ts">
 const props = defineProps<{
-  variant?: 'primary' | 'ghost' | 'outline'
-  size?: 'sm' | 'md'
+  variant?: 'primary' | 'ghost' | 'outline' | 'secondary' | 'danger'
+  size?: 'sm' | 'md' | 'icon'
   type?: 'button' | 'submit'
   fullWidth?: boolean
+  pill?: boolean
   loading?: boolean
   disabled?: boolean
 }>()
@@ -13,14 +14,17 @@ const emit = defineEmits<{
 }>()
 
 const variantClasses = {
-  primary: 'bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-500',
-  ghost:   'bg-transparent text-gray-600 hover:bg-gray-100 active:bg-gray-200 dark:text-white dark:hover:bg-white/10',
-  outline: 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 active:bg-gray-100 dark:border-white/10 dark:bg-transparent dark:text-white dark:hover:bg-white/10',
+  primary: 'bg-btn-primary text-white border border-btn-primary-border hover:bg-btn-primary-hover border-btn-primary-hover-border active:bg-brand-700',
+  ghost:   'bg-transparent text-btn-text-secondary border hover:bg-btn-hover-bg border-ui-border active:bg-btn-active-bg',
+  outline: 'border border-ui-border bg-btn-outline-bg text-btn-text-secondary hover:bg-btn-hover-bg active:bg-btn-active-bg',
+  secondary:   'bg-gray-300 text-gray-800 border border-ui-border hover:bg-gray-350',
+  danger:  'bg-transparent text-btn-danger-text border border-transparent hover:bg-btn-danger-hover-bg hover:border-btn-danger-hover-border active:bg-btn-danger-active-bg',
 } satisfies Record<string, string>
 
 const sizeClasses = {
-  sm: 'h-8 px-3 text-xs',
-  md: 'h-10 px-4 text-sm',
+  sm:   'h-8 px-3 text-xs',
+  md:   'h-10 px-4 text-sm',
+  icon: 'size-8 p-0 text-xs',
 } satisfies Record<string, string>
 
 const isDisabled = computed(() => props.disabled || props.loading)
@@ -31,10 +35,11 @@ const isDisabled = computed(() => props.disabled || props.loading)
     :type="type ?? 'button'"
     :disabled="isDisabled"
     :class="[
-      'inline-flex items-center justify-center gap-2 rounded-xl font-medium',
+      'inline-flex items-center justify-center gap-2 font-medium',
+      pill ? 'rounded-full' : 'rounded-xl',
       'transition-colors duration-150',
       'disabled:cursor-not-allowed disabled:opacity-40',
-      variantClasses[variant ?? 'primary'],
+      variantClasses[variant ?? 'ghost'],
       sizeClasses[size ?? 'md'],
       fullWidth && 'w-full',
     ]"

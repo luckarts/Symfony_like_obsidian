@@ -11,6 +11,16 @@ export default defineNuxtConfig({
   // Modules
   modules: ['@pinia/nuxt', '@vueuse/nuxt', '@nuxtjs/i18n', '@nuxt/ui'],
 
+  // Icons
+  icon: {
+    serverBundle: {
+      collections: ['heroicons'],
+    },
+    clientBundle: {
+      scan: true,
+    },
+  },
+
   // Color mode — data-theme="dark" sur <html> au lieu de class="dark"
   colorMode: {
     dataValue: 'theme',
