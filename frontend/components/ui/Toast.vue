@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   title?: string
   description: string
   variant?: 'info' | 'success' | 'warning' | 'error' | 'destructive'
@@ -8,19 +8,22 @@ defineProps<{
 const emit = defineEmits<{
   close: []
 }>()
+
+const variantClasses: Record<string, string> = {
+  success:     'toast-success',
+  warning:     'toast-warning',
+  error:       'toast-error',
+  destructive: 'toast-error',
+}
+
+const variantClass = computed(() => variantClasses[props.variant ?? ''] ?? 'toast-info')
 </script>
 
 <template>
   <div
     role="alert"
-    :class="[
-      'inline-flex items-start gap-3 rounded-lg px-4 py-3 shadow-md text-sm',
-      variant === 'success'     ? 'bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-      variant === 'warning'     ? 'bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' :
-      variant === 'error' || variant === 'destructive'
-                                ? 'bg-red-50 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                                  'bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
-    ]"
+    :class="['inline-flex items-start gap-3 rounded-lg px-4 py-3 shadow-md text-sm cursor-pointer', variantClass]"
+    @click="emit('close')"
   >
     <!-- Icon -->
     <span class="mt-0.5 shrink-0">
@@ -35,15 +38,17 @@ const emit = defineEmits<{
       <span v-if="title" class="block font-medium">{{ title }}</span>
       <span :class="title ? 'text-xs opacity-80' : ''">{{ description }}</span>
     </span>
-
-    <!-- Close button -->
-    <button
-      type="button"
-      aria-label="Fermer"
-      class="ml-1 shrink-0 rounded p-0.5 opacity-60 hover:opacity-100 transition-opacity"
-      @click="emit('close')"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
   </div>
 </template>
+
+<style scoped>
+.toast-success { background-color: #f0fdf4; color: #166534; }
+.toast-warning { background-color: #fffbeb; color: #92400e; }
+.toast-error   { background-color: #fef2f2; color: #991b1b; }
+.toast-info    { background-color: #eff6ff; color: #1e40af; }
+
+[data-theme='dark'] .toast-success { background-color: rgba(20, 83, 45, 0.3);   color: #86efac; }
+[data-theme='dark'] .toast-warning { background-color: rgba(120, 53, 15, 0.3);  color: #fcd34d; }
+[data-theme='dark'] .toast-error   { background-color: rgba(127, 29, 29, 0.3);  color: #fca5a5; }
+[data-theme='dark'] .toast-info    { background-color: rgba(30, 58, 138, 0.3);  color: #93c5fd; }
+</style>

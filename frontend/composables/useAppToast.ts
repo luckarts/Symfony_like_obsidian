@@ -18,7 +18,7 @@ export function useAppToast() {
   const toasts = useState<AppToast[]>('app-toasts', () => [])
 
   function toast(options: ToastOptions) {
-    const { title, description, variant, duration = 4000 } = options
+    const { title, description, variant, duration = 6000 } = options
     const id = ++_nextId
     toasts.value.push({ id, title, description, variant })
     if (duration > 0) {
