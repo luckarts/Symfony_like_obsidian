@@ -3,7 +3,11 @@ import { useField } from "~/composables/useField";
 import { required } from "~/utils/validators";
 
 defineProps<{
+<<<<<<< HEAD
     loading: boolean;
+=======
+  loading: boolean;
+>>>>>>> 24b007e (feat(auth): replace inline error with toast notifications on signup)
 }>();
 
 const emit = defineEmits<{
@@ -119,6 +123,7 @@ function handleSubmit() {
                 @blur="touchPassword()"
             />
 
+<<<<<<< HEAD
             <Button
                 type="submit"
                 variant="primary"
@@ -134,4 +139,21 @@ function handleSubmit() {
             <AppLink variant="brand" to="/auth/login">Se connecter</AppLink>
         </Text>
     </Card>
+=======
+      <Button
+        type="submit"
+        variant="primary"
+        full-width
+        :loading="loading"
+      >
+        Créer mon compte
+      </Button>
+    </form>
+
+    <Text as="p" class="text-center">
+      Déjà un compte ?
+      <AppLink variant="brand" to="/auth/login">Se connecter</AppLink>
+    </Text>
+  </Card>
+>>>>>>> 24b007e (feat(auth): replace inline error with toast notifications on signup)
 </template>

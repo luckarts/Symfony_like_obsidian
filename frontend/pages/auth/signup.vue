@@ -1,13 +1,12 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'auth' })
 
-const { signup, loading, error } = useSignup()
+const { signup, loading } = useSignup()
 </script>
 
 <template>
   <SignupCard
     :loading="loading"
-    :error="error"
     @submit="signup"
   />
 </template>
