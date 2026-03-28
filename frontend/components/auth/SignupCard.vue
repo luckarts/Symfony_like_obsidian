@@ -3,11 +3,7 @@ import { useField } from "~/composables/useField";
 import { required } from "~/utils/validators";
 
 defineProps<{
-<<<<<<< HEAD
     loading: boolean;
-=======
-  loading: boolean;
->>>>>>> 24b007e (feat(auth): replace inline error with toast notifications on signup)
 }>();
 
 const emit = defineEmits<{
@@ -71,7 +67,7 @@ function handleSubmit() {
     <Card variant="shadow" class="w-full max-w-sm">
         <div class="flex flex-col items-center gap-3">
             <AppLogo size="md" />
-            <Heading :level="1" size="lg">Créer un compte</Heading>
+            <Heading as="h1">Créer un compte</Heading>
         </div>
 
         <form class="space-y-4" novalidate @submit.prevent="handleSubmit">
@@ -123,7 +119,6 @@ function handleSubmit() {
                 @blur="touchPassword()"
             />
 
-<<<<<<< HEAD
             <Button
                 type="submit"
                 variant="primary"
@@ -139,21 +134,4 @@ function handleSubmit() {
             <AppLink variant="brand" to="/auth/login">Se connecter</AppLink>
         </Text>
     </Card>
-=======
-      <Button
-        type="submit"
-        variant="primary"
-        full-width
-        :loading="loading"
-      >
-        Créer mon compte
-      </Button>
-    </form>
-
-    <Text as="p" class="text-center">
-      Déjà un compte ?
-      <AppLink variant="brand" to="/auth/login">Se connecter</AppLink>
-    </Text>
-  </Card>
->>>>>>> 24b007e (feat(auth): replace inline error with toast notifications on signup)
 </template>

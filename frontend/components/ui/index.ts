@@ -6,4 +6,5 @@ export { default as ToastContainer } from './ToastContainer.vue'
 export { default as AppLink } from './AppLink.vue'
 export { default as Label } from './Label.vue'
 export { default as Text } from './Text.vue'
+export { default as Card } from './Card.vue'
 
