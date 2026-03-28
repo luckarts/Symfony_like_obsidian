@@ -4,4 +4,6 @@ export { default as Input } from './Input.vue'
 export { default as Toast } from './Toast.vue'
 export { default as ToastContainer } from './ToastContainer.vue'
 export { default as AppLink } from './AppLink.vue'
+export { default as Label } from './Label.vue'
+export { default as Text } from './Text.vue'
 
