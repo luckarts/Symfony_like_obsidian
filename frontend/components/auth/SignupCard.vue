@@ -64,11 +64,23 @@ function handleSubmit() {
 </script>
 
 <template>
+<<<<<<< HEAD
     <Card variant="shadow" class="w-full max-w-sm">
         <div class="flex flex-col items-center gap-3">
             <AppLogo size="md" />
             <Heading as="h1">Créer un compte</Heading>
         </div>
+=======
+  <Card variant="shadow" class="w-full max-w-sm">
+    <div class="flex flex-col items-center gap-3">
+      <AppLogo size="md" />
+<<<<<<< HEAD
+      <Heading :level="1" size="lg">Créer un compte</Heading>
+=======
+      <Heading :level="1" size="lg">Créer un compte</Heading>
+>>>>>>> ed28416 (feat(ui): add Heading atom, use it in SignupCard)
+    </div>
+>>>>>>> e668acb (feat(ui): add Heading atom, use it in SignupCard)
 
         <form class="space-y-4" novalidate @submit.prevent="handleSubmit">
             <div class="flex gap-3">
