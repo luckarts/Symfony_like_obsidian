@@ -1,6 +1,6 @@
 security:
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        App\User\Domain\Entity\User: 'auto'
 
     providers:
         in_memory:
