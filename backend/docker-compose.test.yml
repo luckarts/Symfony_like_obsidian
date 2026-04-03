@@ -1,0 +1,34 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    volumes:
+      - .:/app
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      APP_ENV: test
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8"
+      MESSENGER_TRANSPORT_DSN: "doctrine://default?auto_setup=0"
+      MAILER_DSN: "null://null"
+      OAUTH_PRIVATE_KEY: /app/var/oauth/private.pem
+      OAUTH_PUBLIC_KEY: /app/var/oauth/public.pem
+      OAUTH_PASSPHRASE: ""
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY:-test_encryption_key_32_chars_long}
+    working_dir: /app
+
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

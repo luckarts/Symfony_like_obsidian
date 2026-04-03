@@ -4,15 +4,7 @@ doctrine:
 
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)
-<<<<<<< HEAD
-<<<<<<< HEAD
         server_version: '16'
-=======
-        #server_version: '16'
->>>>>>> 874d6ff (init project)
-=======
-        server_version: '16'
->>>>>>> ed4f6b3 (ci: add test.yml — basic structure)
 
         profiling_collect_backtrace: '%kernel.debug%'
     orm:
@@ -24,6 +16,13 @@ doctrine:
         identity_generation_preferences:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
         auto_mapping: true
+        mappings:
+            App:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src'
+                prefix: 'App\'
+                alias: App
         controller_resolver:
             auto_mapping: false
 

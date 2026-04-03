@@ -1,0 +1,169 @@
+name: Migrations
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+  push:
+    branches: [main, develop, fix/migration-workflow]
+    paths:
+      - 'backend/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+
+  # ─── JOB 1 : DB fraîche → migrate → validate ──────────────────────────────
+  migrate-fresh:
+    name: Migrate fresh DB + validate schema
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Cache PostgreSQL Docker image
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-postgres-16-alpine
+
+      - name: Load or pull PostgreSQL image
+        run: |
+          if [ -f /tmp/docker-cache/postgres.tar ]; then
+            docker load < /tmp/docker-cache/postgres.tar
+          else
+            docker pull postgres:16-alpine
+            mkdir -p /tmp/docker-cache
+            docker save postgres:16-alpine -o /tmp/docker-cache/postgres.tar
+          fi
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_DB=app -e POSTGRES_USER=app -e POSTGRES_PASSWORD=test \
+            -p 5432:5432 postgres:16-alpine
+          until docker exec postgres pg_isready -U app; do sleep 1; done
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Create database
+        run: php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+
+      - name: Apply all migrations
+        run: php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+
+      - name: Validate schema matches entities
+        # Fails if: (1) entity mapping invalid, (2) DB schema out of sync with entities
+        # This also catches forgotten migrations (entity changed without doctrine:migrations:diff)
+        run: php bin/console doctrine:schema:validate
+
+
+  # ─── JOB 2 : Migrate → rollback → migrate (teste la réversibilité) ────────
+  migrate-rollback:
+    name: Rollback last migration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: migrate-fresh
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Cache PostgreSQL Docker image
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-postgres-16-alpine
+
+      - name: Load or pull PostgreSQL image
+        run: |
+          if [ -f /tmp/docker-cache/postgres.tar ]; then
+            docker load < /tmp/docker-cache/postgres.tar
+          else
+            docker pull postgres:16-alpine
+            mkdir -p /tmp/docker-cache
+            docker save postgres:16-alpine -o /tmp/docker-cache/postgres.tar
+          fi
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_DB=app -e POSTGRES_USER=app -e POSTGRES_PASSWORD=test \
+            -p 5432:5432 postgres:16-alpine
+          until docker exec postgres pg_isready -U app; do sleep 1; done
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Create database
+        run: php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+
+      - name: Apply all migrations (up)
+        run: php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+
+      - name: Count executed migrations
+        id: count
+        run: |
+          COUNT=$(php bin/console doctrine:migrations:status --no-interaction 2>&1 \
+            | grep ">> Executed Migrations:" \
+            | awk -F: '{print $NF}' \
+            | tr -d ' ')
+          echo "count=${COUNT:-0}" >> $GITHUB_OUTPUT
+          echo "Executed migrations: ${COUNT:-0}"
+
+      - name: Rollback last migration (down)
+        if: steps.count.outputs.count != '0'
+        run: php bin/console doctrine:migrations:migrate prev --no-interaction
+
+      - name: Re-apply (up again)
+        if: steps.count.outputs.count != '0'
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      - name: Validate schema after rollback cycle
+        run: php bin/console doctrine:schema:validate
