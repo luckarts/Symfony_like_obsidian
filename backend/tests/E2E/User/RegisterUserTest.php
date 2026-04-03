@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\E2E\User;
 
-use App\Tests\E2E\AbstractApiTestCase;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Component\HttpFoundation\Response;

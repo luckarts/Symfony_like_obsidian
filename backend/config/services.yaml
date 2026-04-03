@@ -15,6 +15,10 @@ services:
     App\Shared\:
         resource: '../src/Shared/'
 
+    # --- Auth Bounded Context ---
+    App\Auth\:
+        resource: '../src/Auth/'
+
     # --- User Bounded Context ---
     App\User\:
         resource: '../src/User/'
@@ -27,4 +31,3 @@ services:
 
     App\User\Domain\Contract\PasswordHasherInterface:
         alias: App\User\Infrastructure\Security\SymfonyPasswordHasher
-

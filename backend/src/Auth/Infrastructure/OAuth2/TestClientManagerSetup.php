@@ -2,44 +2,42 @@
 
 declare(strict_types=1);
 
-namespace App\Auth\Application\Command;
+namespace App\Auth\Infrastructure\OAuth2;
 
-use League\Bundle\OAuth2ServerBundle\Manager\ClientManagerInterface;
+use League\Bundle\OAuth2ServerBundle\Manager\InMemory\ClientManager;
 use League\Bundle\OAuth2ServerBundle\Model\Client;
 use League\Bundle\OAuth2ServerBundle\ValueObject\Grant;
 use League\Bundle\OAuth2ServerBundle\ValueObject\Scope;
-use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 
-#[AsCommand(
-    name: 'app:oauth:setup-client',
-    description: 'Create or update the default OAuth2 client',
-)]
-final class SetupOAuthClientCommand extends Command
+final class TestClientManagerSetup
 {
+    private bool $initialized = false;
+
     public function __construct(
-        private readonly ClientManagerInterface $clientManager,
+        private readonly ClientManager $clientManager,
         #[Autowire(env: 'OAUTH_DEFAULT_CLIENT_ID')]
         private readonly string $clientId,
         #[Autowire(env: 'OAUTH_DEFAULT_CLIENT_SECRET')]
         private readonly string $clientSecret,
     ) {
-        parent::__construct();
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    public function setupTestClient(RequestEvent $event): void
     {
-        if ($this->clientManager->find($this->clientId) !== null) {
-            $output->writeln(sprintf("OAuth2 client '%s' already exists.", $this->clientId));
+        if ($this->initialized) {
+            return;
+        }
 
-            return Command::SUCCESS;
+        if ($this->clientManager->find($this->clientId) !== null) {
+            $this->initialized = true;
+
+            return;
         }
 
         $client = new Client(
-            name: 'Default Client',
+            name: 'Test Client',
             identifier: $this->clientId,
             secret: $this->clientSecret,
         );
@@ -58,9 +56,6 @@ final class SetupOAuthClientCommand extends Command
         );
 
         $this->clientManager->save($client);
-
-        $output->writeln(sprintf("OAuth2 client '%s' created successfully.", $this->clientId));
-
-        return Command::SUCCESS;
+        $this->initialized = true;
     }
 }

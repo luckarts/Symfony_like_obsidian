@@ -17,6 +17,8 @@ services:
       OAUTH_PUBLIC_KEY: /app/var/oauth/public.pem
       OAUTH_PASSPHRASE: ""
       OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY:-test_encryption_key_32_chars_long}
+      OAUTH_DEFAULT_CLIENT_ID: ${OAUTH_DEFAULT_CLIENT_ID:-test_client}
+      OAUTH_DEFAULT_CLIENT_SECRET: ${OAUTH_DEFAULT_CLIENT_SECRET:-test_secret}
     working_dir: /app
 
   database:
