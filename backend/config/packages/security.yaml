@@ -3,6 +3,8 @@ security:
         App\User\Domain\Entity\User: 'auto'
 
     providers:
+        database_users:
+            id: App\User\Infrastructure\Security\UserProvider
         in_memory:
             memory: ~
 
@@ -13,8 +15,13 @@ security:
         main:
             lazy: true
             stateless: true
+            provider: database_users
+            oauth2: true
 
-    access_control: []
+    access_control:
+        - { path: ^/api/auth/token, roles: PUBLIC_ACCESS }
+        - { path: ^/api/users, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

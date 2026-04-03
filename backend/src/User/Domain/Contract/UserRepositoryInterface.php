@@ -13,6 +13,8 @@ interface UserRepositoryInterface
     /** @return list<User> */
     public function findAll(): array;
 
+    public function findByEmail(string $email): ?User;
+
     public function existsByEmail(string $email): bool;
 
     public function save(User $project): void;
