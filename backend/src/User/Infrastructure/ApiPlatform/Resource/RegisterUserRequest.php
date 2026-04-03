@@ -6,7 +6,9 @@ namespace App\User\Infrastructure\ApiPlatform\Resource;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Post;
-use App\User\Infrastructure\State\Processor\RegisterProcessor;
+use App\User\Infrastructure\ApiPlatform\Resource\UserResource;
+use App\User\Infrastructure\ApiPlatform\State\Processor\RegisterProcessor;
+
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
@@ -15,6 +17,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new Post(
             uriTemplate: '/users',
             processor: RegisterProcessor::class,
+            output:UserResource::class
         ),
     ],
     routePrefix: '/api',
