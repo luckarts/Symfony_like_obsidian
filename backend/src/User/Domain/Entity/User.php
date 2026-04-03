@@ -50,6 +50,22 @@ class User
         $this->updatedAt = new \DateTimeImmutable();
     }
 
+    public static function register(
+        string $email,
+        string $hashedPassword,
+        string $firstName,
+        string $lastName,
+    ): self {
+        $user = new self();
+        $user->email = $email;
+        $user->password = $hashedPassword;
+        $user->firstName = $firstName;
+        $user->lastName = $lastName;
+        $user->roles = [Role::ROLE_USER->value];
+
+        return $user;
+    }
+    
     public function getId(): ?string
     {
         return $this->id;
