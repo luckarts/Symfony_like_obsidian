@@ -24,16 +24,7 @@ class ProfileProvider implements ProviderInterface
     {
         /** @var SecurityUser $securityUser */
         $securityUser = $this->security->getUser();
-        $user = $securityUser->getUser();
 
-        $profile = new UserProfile();
-        $profile->id = (string) $user->getId();
-        $profile->email = $user->getEmail();
-        $profile->firstName = $user->getFirstName();
-        $profile->lastName = $user->getLastName();
-        $profile->roles = $user->getRoles();
-        $profile->createdAt = $user->getCreatedAt()->format(\DateTimeInterface::ATOM);
-
-        return $profile;
+        return UserProfile::fromEntity($securityUser->getUser());
     }
 }

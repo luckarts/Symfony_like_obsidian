@@ -6,6 +6,7 @@ namespace App\User\Infrastructure\ApiPlatform\Resource;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use App\User\Domain\Entity\User;
 use App\User\Infrastructure\ApiPlatform\State\Provider\ProfileProvider;
 
 #[ApiResource(
@@ -29,4 +30,17 @@ class UserProfile
     public array $roles = [];
 
     public string $createdAt = '';
+
+    public static function fromEntity(User $user): self
+    {
+        $profile = new self();
+        $profile->id = (string) $user->getId();
+        $profile->email = $user->getEmail();
+        $profile->firstName = $user->getFirstName();
+        $profile->lastName = $user->getLastName();
+        $profile->roles = $user->getRoles();
+        $profile->createdAt = $user->getCreatedAt()->format(\DateTimeInterface::ATOM);
+
+        return $profile;
+    }
 }
