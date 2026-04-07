@@ -32,10 +32,7 @@
     "test:e2e:tag:regression": "pnpm test:e2e:clean && playwright test --grep @regression"
   },
   "lint-staged": {
-    "*.{js,ts,vue}": [
-      "biome check --write",
-      "biome format --write"
-    ]
+    "*.{js,ts,vue}": ["biome check --write", "biome format --write"]
   },
   "dependencies": {
     "@iconify-json/heroicons": "^1.2.0",

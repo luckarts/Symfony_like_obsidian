@@ -14,16 +14,20 @@ const emit = defineEmits<{
 }>()
 
 const variantClasses = {
-  primary: 'bg-btn-primary text-white border border-btn-primary-border hover:bg-btn-primary-hover border-btn-primary-hover-border active:bg-brand-700',
-  ghost:   'bg-transparent text-btn-text-secondary border hover:bg-btn-hover-bg border-ui-border active:bg-btn-active-bg',
-  outline: 'border border-ui-border bg-btn-outline-bg text-btn-text-secondary hover:bg-btn-hover-bg active:bg-btn-active-bg',
-  secondary:   'bg-gray-300 text-gray-800 border border-ui-border hover:bg-gray-350',
-  danger:  'bg-transparent text-btn-danger-text border border-transparent hover:bg-btn-danger-hover-bg hover:border-btn-danger-hover-border active:bg-btn-danger-active-bg',
+  primary:
+    'bg-btn-primary text-white border border-btn-primary-border hover:bg-btn-primary-hover border-btn-primary-hover-border active:bg-brand-700',
+  ghost:
+    'bg-transparent text-btn-text-secondary border hover:bg-btn-hover-bg border-ui-border active:bg-btn-active-bg',
+  outline:
+    'border border-ui-border bg-btn-outline-bg text-btn-text-secondary hover:bg-btn-hover-bg active:bg-btn-active-bg',
+  secondary: 'bg-gray-300 text-gray-800 border border-ui-border hover:bg-gray-350',
+  danger:
+    'bg-transparent text-btn-danger-text border border-transparent hover:bg-btn-danger-hover-bg hover:border-btn-danger-hover-border active:bg-btn-danger-active-bg',
 } satisfies Record<string, string>
 
 const sizeClasses = {
-  sm:   'h-8 px-3 text-xs',
-  md:   'h-10 px-4 text-sm',
+  sm: 'h-8 px-3 text-xs',
+  md: 'h-10 px-4 text-sm',
   icon: 'size-8 p-0 text-xs',
 } satisfies Record<string, string>
 

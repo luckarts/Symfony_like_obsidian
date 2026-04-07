@@ -8,14 +8,14 @@ const props = defineProps<{
 }>()
 
 const variantClasses = {
-  brand:  'text-link-primary hover:text-link-primary-hover hover:underline focus-visible:underline',
-  secondary:  'text-gray-450 hover:text-gray-600 hover:underline focus-visible:underline',
+  brand: 'text-link-primary hover:text-link-primary-hover hover:underline focus-visible:underline',
+  secondary: 'text-gray-450 hover:text-gray-600 hover:underline focus-visible:underline',
   subtle: 'text-text hover:underline focus-visible:underline',
 } satisfies Record<string, string>
 
 const sizeClasses = {
-  xs:   'text-xs',
-  sm:   'text-sm',
+  xs: 'text-xs',
+  sm: 'text-sm',
   base: 'text-base',
 } satisfies Record<string, string>
 </script>

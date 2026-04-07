@@ -4,9 +4,9 @@ const props = defineProps<{
 }>()
 
 const variantClasses = {
-  flat:     '',
+  flat: '',
   bordered: 'rounded-2xl border border-ui-border',
-  shadow:   'rounded-2xl shadow-sm',
+  shadow: 'rounded-2xl shadow-sm',
 } satisfies Record<string, string>
 </script>
 

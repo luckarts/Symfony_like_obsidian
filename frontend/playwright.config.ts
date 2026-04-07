@@ -110,12 +110,13 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   // In Docker (CI=true), don't start a new server - use the existing nuxt container
-  webServer: process.env.CI || process.env.PLAYWRIGHT_START_SERVER === 'false'
-    ? undefined
-    : {
-        command: 'pnpm dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: true,
-        timeout: 120 * 1000,
-      },
+  webServer:
+    process.env.CI || process.env.PLAYWRIGHT_START_SERVER === 'false'
+      ? undefined
+      : {
+          command: 'pnpm dev',
+          url: 'http://localhost:3000',
+          reuseExistingServer: true,
+          timeout: 120 * 1000,
+        },
 })

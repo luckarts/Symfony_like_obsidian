@@ -9,10 +9,10 @@ type Size = 'sm' | 'base' | 'lg' | 'xl' | '2xl'
 const tag = computed(() => `h${props.level ?? 2}`)
 
 const sizeClasses: Record<Size, string> = {
-  sm:   'text-sm',
+  sm: 'text-sm',
   base: 'text-base',
-  lg:   'text-lg',
-  xl:   'text-xl',
+  lg: 'text-lg',
+  xl: 'text-xl',
   '2xl': 'text-2xl',
 }
 

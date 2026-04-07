@@ -10,9 +10,9 @@ const emit = defineEmits<{
 }>()
 
 const variantClasses: Record<string, string> = {
-  success:     'toast-success',
-  warning:     'toast-warning',
-  error:       'toast-error',
+  success: 'toast-success',
+  warning: 'toast-warning',
+  error: 'toast-error',
   destructive: 'toast-error',
 }
 

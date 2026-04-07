@@ -3,7 +3,7 @@ const props = defineProps<{
   size?: 'sm' | 'md' | 'lg'
 }>()
 
-const sizePx = computed(() => ({ sm: 32, md: 48, lg: 64 }[props.size ?? 'md']))
+const sizePx = computed(() => ({ sm: 32, md: 48, lg: 64 })[props.size ?? 'md'])
 </script>
 
 <template>

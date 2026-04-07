@@ -4,46 +4,46 @@
 
 /* Couleurs custom non-incluses dans Tailwind */
 @theme {
-  --color-navy-700: #1B2559;
-  --color-navy-800: #111C44;
-  --color-navy-900: #0B1437;
-  --color-brand-400: #7551FF;
-  --color-brand-500: #422AFB;
-  --color-brand-600: #3311DB;
-  --color-gray-50:  #f6f7f9;
+  --color-navy-700: #1b2559;
+  --color-navy-800: #111c44;
+  --color-navy-900: #0b1437;
+  --color-brand-400: #7551ff;
+  --color-brand-500: #422afb;
+  --color-brand-600: #3311db;
+  --color-gray-50: #f6f7f9;
   --color-gray-100: #f0f1f4;
-  --color-gray-150: #ECEDF1;
+  --color-gray-150: #ecedf1;
   --color-gray-175: #ebebeb;
   --color-gray-200: #e2e5ea;
   --color-gray-225: #dedede;
-  --color-gray-250: #D8DBE1;
+  --color-gray-250: #d8dbe1;
   --color-gray-265: #d9d9d9;
-  --color-gray-350: #B7BCC5;
-  --color-gray-450: #838A97;
+  --color-gray-350: #b7bcc5;
+  --color-gray-450: #838a97;
   --color-card: white;
   --color-ui-border: rgba(31, 30, 29, 0.3);
   --text-base-color: #111827;
   --text-heading-color: #0d1117;
 
   /* Button variants */
-  --color-link-primary:             var(--color-brand-500);
-  --color-link-primary-hover:       var(--color-brand-400);
+  --color-link-primary: var(--color-brand-500);
+  --color-link-primary-hover: var(--color-brand-400);
 
-  --color-btn-primary:              var(--color-brand-500);
-  --color-btn-primary-border:       var(--color-brand-600);
-  --color-btn-primary-hover:        var(--color-brand-600);
+  --color-btn-primary: var(--color-brand-500);
+  --color-btn-primary-border: var(--color-brand-600);
+  --color-btn-primary-hover: var(--color-brand-600);
   --color-btn-primary-hover-border: #2a0cc5;
 
-  --color-btn-text-secondary:       #4B5563;
-  --color-btn-hover-bg:             #dedede;
+  --color-btn-text-secondary: #4b5563;
+  --color-btn-hover-bg: #dedede;
 
-  --color-btn-active-bg:            #E5E7EB;
-  --color-btn-outline-bg:           #ffffff;
+  --color-btn-active-bg: #e5e7eb;
+  --color-btn-outline-bg: #ffffff;
 
-  --color-btn-danger-text:          #DC2626;
-  --color-btn-danger-hover-bg:      #FEF2F2;
-  --color-btn-danger-active-bg:     #FEE2E2;
-  --color-btn-danger-hover-border:  #FECACA;
+  --color-btn-danger-text: #dc2626;
+  --color-btn-danger-hover-bg: #fef2f2;
+  --color-btn-danger-active-bg: #fee2e2;
+  --color-btn-danger-hover-border: #fecaca;
 }
 
 /* Nuxt UI overrides */
@@ -51,12 +51,12 @@
   --ui-bg: var(--color-gray-100);
 }
 
-[data-theme='dark'] {
-  --ui-border: #1B2559;
+[data-theme="dark"] {
+  --ui-border: #1b2559;
   --ui-bg: var(--color-gray-265);
 
   /* Custom grays — dark counterparts */
-  --color-gray-50:  #111316;
+  --color-gray-50: #111316;
   --color-gray-100: #17191d;
   --color-gray-150: #1e2024;
   --color-gray-175: #1a1c20;
@@ -66,28 +66,28 @@
   --color-gray-265: #282b33;
   --color-gray-350: #363a45;
   --color-gray-450: #4e5468;
-  
+
   --color-card: var(--color-gray-150);
   --color-ui-border: rgba(255, 255, 255, 0.1);
   --text-base-color: #f3f4f6;
   --text-heading-color: #ffffff;
 
   /* Button variants — dark overrides */
-  --color-btn-primary:              var(--color-brand-400);
-  --color-link-primary:             #ffffff;
-  --color-link-primary-hover:       rgb(105, 85, 255);
+  --color-btn-primary: var(--color-brand-400);
+  --color-link-primary: #ffffff;
+  --color-link-primary-hover: rgb(105, 85, 255);
 
-  --color-btn-primary-border:       var(--color-brand-500);
-  --color-btn-primary-hover:        var(--color-brand-500);
+  --color-btn-primary-border: var(--color-brand-500);
+  --color-btn-primary-hover: var(--color-brand-500);
   --color-btn-primary-hover-border: var(--color-brand-600);
 
-  --color-btn-text-secondary:       #ffffff;
-  --color-btn-hover-bg:             rgba(255, 255, 255, 0.1);
-  --color-btn-active-bg:            rgba(255, 255, 255, 0.15);
-  --color-btn-outline-bg:           transparent;
+  --color-btn-text-secondary: #ffffff;
+  --color-btn-hover-bg: rgba(255, 255, 255, 0.1);
+  --color-btn-active-bg: rgba(255, 255, 255, 0.15);
+  --color-btn-outline-bg: transparent;
 
-  --color-btn-danger-text:          #F87171;
-  --color-btn-danger-hover-bg:      rgba(127, 29, 29, 0.2);
-  --color-btn-danger-active-bg:     rgba(127, 29, 29, 0.2);
-  --color-btn-danger-hover-border:  rgba(153, 27, 27, 0.4);
+  --color-btn-danger-text: #f87171;
+  --color-btn-danger-hover-bg: rgba(127, 29, 29, 0.2);
+  --color-btn-danger-active-bg: rgba(127, 29, 29, 0.2);
+  --color-btn-danger-hover-border: rgba(153, 27, 27, 0.4);
 }

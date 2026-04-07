@@ -74,11 +74,7 @@ function handleSubmit() {
   <Card variant="shadow" class="w-full max-w-sm">
     <div class="flex flex-col items-center gap-3">
       <AppLogo size="md" />
-<<<<<<< HEAD
       <Heading :level="1" size="lg">Créer un compte</Heading>
-=======
-      <Heading :level="1" size="lg">Créer un compte</Heading>
->>>>>>> ed28416 (feat(ui): add Heading atom, use it in SignupCard)
     </div>
 >>>>>>> e668acb (feat(ui): add Heading atom, use it in SignupCard)
 

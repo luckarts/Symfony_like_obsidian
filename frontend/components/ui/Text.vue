@@ -8,17 +8,17 @@ const props = defineProps<{
 const tag = computed(() => props.as ?? 'span')
 
 const sizeClasses = {
-  xs:   'text-xs',
-  sm:   'text-sm',
+  xs: 'text-xs',
+  sm: 'text-sm',
   base: 'text-base',
-  lg:   'text-lg',
-  xl:   'text-xl',
+  lg: 'text-lg',
+  xl: 'text-xl',
 } satisfies Record<string, string>
 
 const colorClasses = {
   default: 'text-base-color',
   secondary: 'text-gray-500',
-  error:   'text-red-500',
+  error: 'text-red-500',
   success: 'text-green-500',
 } satisfies Record<string, string>
 </script>
