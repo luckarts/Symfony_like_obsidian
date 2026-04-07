@@ -19,12 +19,8 @@ export default {
     confirmPassword: 'Confirm password',
     forgotPassword: 'Forgot password?',
   },
-<<<<<<< HEAD
- 
-=======
   user: {
     lightMode: 'Light mode',
     darkMode: 'Dark mode',
   },
->>>>>>> 48bbc04 (feat(ui): add design system CSS variables, Button component, i18n and layout for auth)
 }
