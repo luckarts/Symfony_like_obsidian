@@ -6,8 +6,10 @@ namespace App\User\Infrastructure\ApiPlatform\Resource;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Put;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\ApiPlatform\State\Provider\ProfileProvider;
+use App\User\Infrastructure\ApiPlatform\State\Processor\UpdateProfileProcessor;
 
 #[ApiResource(
     shortName: 'UserProfile',
@@ -15,6 +17,11 @@ use App\User\Infrastructure\ApiPlatform\State\Provider\ProfileProvider;
         new Get(
             uriTemplate: '/users/{id}',
             provider: ProfileProvider::class,
+        ),
+        new Put(
+            uriTemplate: '/users/{id}/profile',
+            provider: ProfileProvider::class,
+            processor: UpdateProfileProcessor::class,
         ),
     ],
     routePrefix: '/api',
