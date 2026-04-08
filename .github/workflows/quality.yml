@@ -2,11 +2,13 @@ name: Code Quality
 
 on:
   pull_request:
-    branches: [main, master]
-    # Suppression du filtre paths pour déclencher sur toute PR
+    branches: [main, master, develop]
+    paths:
+      - 'backend/**'
   push:
     branches: [main, master, develop]
-    # Ajout de develop + suppression du filtre paths
+    paths:
+      - 'backend/**'
 
 jobs:
   # Validation légère sur PR
