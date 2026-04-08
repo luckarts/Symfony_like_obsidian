@@ -56,6 +56,14 @@ class RegisterValidationTest extends KernelTestCase
     }
 
     #[Test]
+    public function password_too_weak_fails(): void
+    {
+        $violations = $this->validator->validate($this->validDto(password: 'password123'));
+
+        $this->assertViolationOn($violations, 'password');
+    }
+
+    #[Test]
     public function firstname_blank_fails(): void
     {
         $violations = $this->validator->validate($this->validDto(firstName: ''));
@@ -81,7 +89,7 @@ class RegisterValidationTest extends KernelTestCase
 
     private function validDto(
         string $email = 'valid@example.com',
-        string $password = 'password123',
+        string $password = 'T3st!P@ss#Api42',
         string $firstName = 'John',
         string $lastName = 'Doe',
     ): RegisterUserRequest {

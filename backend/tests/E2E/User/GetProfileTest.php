@@ -19,7 +19,7 @@ class GetProfileTest extends AbstractApiTestCase
     public function get_profile_returns_authenticated_user_data(): void
     {
         $email = 'profile_' . uniqid() . '@example.com';
-        $password = 'password123';
+        $password = 'T3st!P@ss#Api42';
 
         $this->createUser($email, $password, 'Alice', 'Smith');
         $token = $this->getOAuth2Token($email, $password);

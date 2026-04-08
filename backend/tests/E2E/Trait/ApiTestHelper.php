@@ -17,7 +17,7 @@ trait ApiTestHelper
 {
    protected KernelBrowser $client;
     
-    private const DEFAULT_PASSWORD = 'password123';
+    private const DEFAULT_PASSWORD = 'T3st!P@ss#Api42';
     private const CLIENT_ID = 'test_client';
     private const CLIENT_SECRET = 'test_secret';
     private bool $oauthClientRegistered = false;
@@ -78,7 +78,7 @@ trait ApiTestHelper
 
     protected function getOAuth2Token(
         string $email = 'test@test.com',
-        string $password = 'password123',
+        string $password = self::DEFAULT_PASSWORD,
     ): string {
         $this->setUpApiTestHelper();
 

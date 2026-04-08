@@ -41,7 +41,7 @@ class LoginUserTest extends WebTestCase
     public function login_with_valid_credentials_returns_access_token(): void
     {
         $email = 'login_' . uniqid() . '@example.com';
-        $password = 'password123';
+        $password = 'T3st!P@ss#Api42';
 
         $this->client->request(
             'POST',
@@ -89,7 +89,7 @@ class LoginUserTest extends WebTestCase
             [],
             [],
             ['CONTENT_TYPE' => 'application/ld+json'],
-            json_encode(['email' => $email, 'password' => 'password123', 'firstName' => 'Jane', 'lastName' => 'Doe']),
+            json_encode(['email' => $email, 'password' => 'T3st!P@ss#Api42', 'firstName' => 'Jane', 'lastName' => 'Doe']),
         );
         $this->assertSame(Response::HTTP_CREATED, $this->client->getResponse()->getStatusCode());
 
