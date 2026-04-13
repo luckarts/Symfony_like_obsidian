@@ -6,7 +6,6 @@ on:
     paths:
       - 'backend/**'
   push:
-    branches: [main, develop, fix/migration-workflow]
     paths:
       - 'backend/**'
 
@@ -83,6 +82,18 @@ jobs:
       - name: Validate schema matches entities
         # Fails if: (1) entity mapping invalid, (2) DB schema out of sync with entities
         # This also catches forgotten migrations (entity changed without doctrine:migrations:diff)
+        run: php bin/console doctrine:schema:validate
+
+      - name: Validate schema matches entities (dev env)
+        # In test env, league/oauth2-server-bundle uses in_memory persistence,
+        # so oauth2_* entities are excluded from the Doctrine mapping and
+        # the check above never sees them. Re-run with APP_ENV=dev (doctrine
+        # persistence active) to catch missing migrations for those entities.
+        # DATABASE_URL must point to the same DB where migrations ran (app_test
+        # with the test suffix applied), not the bare app database.
+        env:
+          APP_ENV: dev
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app_test
         run: php bin/console doctrine:schema:validate
 
 

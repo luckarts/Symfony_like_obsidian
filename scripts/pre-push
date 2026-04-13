@@ -1,0 +1,18 @@
+#!/bin/sh
+# Pre-push hook: validate Doctrine schema in test AND dev env.
+#
+# Why two envs: league/oauth2-server-bundle uses in_memory persistence in
+# the test env, so oauth2_* entities are excluded from the Doctrine mapping
+# and `doctrine:schema:validate` never sees them there. The dev env run
+# catches missing migrations for those entities.
+#
+# Only runs if backend files are part of the push.
+
+if ! git diff --name-only @{u}.. 2>/dev/null | grep -q '^backend/'; then
+    exit 0
+fi
+
+set -e
+
+echo "pre-push: validating Doctrine schema (dev env)..."
+docker exec -e APP_ENV=dev app-backend php bin/console doctrine:schema:validate
