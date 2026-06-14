@@ -99,4 +99,22 @@ class RefreshTokenTest extends AbstractApiTestCase
 
         $this->assertSame(Response::HTTP_BAD_REQUEST, $this->client->getResponse()->getStatusCode());
     }
+
+    #[Test]
+    #[Group('e2e')]
+    #[Group('user')]
+    public function invalid_refresh_token_is_rejected(): void
+    {
+        $this->setUpApiTestHelper();
+
+        $this->client->request('POST', '/oauth2/token', [
+            'grant_type' => 'refresh_token',
+            'client_id' => self::CLIENT_ID,
+            'client_secret' => self::CLIENT_SECRET,
+            'refresh_token' => 'not-a-valid-refresh-token',
+            'scope' => 'email',
+        ]);
+
+        $this->assertSame(Response::HTTP_BAD_REQUEST, $this->client->getResponse()->getStatusCode());
+    }
 }
