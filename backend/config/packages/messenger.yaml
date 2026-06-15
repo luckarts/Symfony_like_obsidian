@@ -22,3 +22,9 @@ framework:
 
         routing:
             'App\Email\Application\Message\SendVerificationEmailMessage': async
+
+when@test:
+    framework:
+        messenger:
+            routing:
+                'App\Email\Application\Message\SendVerificationEmailMessage': sync
