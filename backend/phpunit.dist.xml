@@ -24,11 +24,15 @@
         <!-- DATABASE_URL="sqlite:///%kernel.project_dir%/var/data_%kernel.environment%.db" -->
         <!-- DATABASE_URL="mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=8.0.32&charset=utf8mb4" -->
         <!-- DATABASE_URL="mysql://app:!ChangeMe!@127.0.0.1:3306/app?serverVersion=10.11.2-MariaDB&charset=utf8mb4" -->
-        <env name="DATABASE_URL" value="mysql://admin:Jesuisdev06,@127.0.0.1:3306/SymfOauthTest"/>
+        <env name="DATABASE_URL" value="postgresql://app:change_me@127.0.0.1:5433/app?serverVersion=16&amp;charset=utf8"/>
         <!-- ###- doctrine/doctrine-bundle ### -->
         <!-- ###+ nelmio/cors-bundle ### -->
-        <env name="CORS_ALLOW_ORIGIN" value="'^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'"/>
+        <env name="CORS_ALLOW_ORIGIN" value="^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://app\.obsidian-web\.local$"/>
         <!-- ###- nelmio/cors-bundle ### -->
+
+        <!-- ###+ league/oauth2-server-bundle ### -->
+        <env name="OAUTH_ENCRYPTION_KEY" value="244b5dfece4ac6d1d3ae50f6cc5d1a62491b18bcaf93c1a9a6149db3c4ebdb76"/>
+        <!-- ###- league/oauth2-server-bundle ### -->
 
         <!-- ###+ symfony/messenger ### -->
         <!-- Choose one of the transports below -->
@@ -39,6 +43,7 @@
 
         <!-- ###+ symfony/mailer ### -->
         <env name="MAILER_DSN" value="null://null"/>
+        <env name="MAILER_FROM_EMAIL" value="noreply@obsidian-web.local"/>
         <!-- ###- symfony/mailer ### -->
 
         <!-- ###+ symfony/telegram-notifier ### -->

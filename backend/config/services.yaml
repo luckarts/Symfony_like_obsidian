@@ -19,11 +19,17 @@ services:
     App\Auth\:
         resource: '../src/Auth/'
 
+    # --- Email Bounded Context ---
+    App\Email\:
+        resource: '../src/Email/'
+
     # --- User Bounded Context ---
     App\User\:
         resource: '../src/User/'
         exclude:
             - '../src/User/Domain/Entity/'
+            - '../src/User/Infrastructure/Doctrine/ResetPasswordRequest.php'
+            - '../src/User/Infrastructure/Security/SecurityUser.php'
 
     # --- Contract bindings (interface → implementation) ---
     App\User\Domain\Contract\UserRepositoryInterface:
@@ -31,3 +37,7 @@ services:
 
     App\User\Domain\Contract\PasswordHasherInterface:
         alias: App\User\Infrastructure\Security\SymfonyPasswordHasher
+
+    App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository:
+        autowire: true
+        autoconfigure: true
