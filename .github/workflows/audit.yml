@@ -3,11 +3,13 @@ name: Security Audit
 on:
   push:
     branches: [main, master, develop]
-    # Audit sur push vers toute branche principale
+    paths:
+      - 'backend/**'
 
   pull_request:
-    branches: [main, master]
-    # Audit sur PR vers main uniquement
+    branches: [main, master, develop]
+    paths:
+      - 'backend/**'
 
   # Déclenchement manuel uniquement
   workflow_dispatch:

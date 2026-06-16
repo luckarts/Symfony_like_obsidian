@@ -1,7 +1,7 @@
 league_oauth2_server:
     authorization_server:
         private_key: '%env(resolve:OAUTH_PRIVATE_KEY)%'
-        private_key_passphrase: '%env(resolve:OAUTH_PASSPHRASE)%'
+        private_key_passphrase: '%env(default::resolve:OAUTH_PASSPHRASE)%'
         encryption_key: '%env(resolve:OAUTH_ENCRYPTION_KEY)%'
         access_token_ttl: PT1H
         refresh_token_ttl: P1M
@@ -18,6 +18,8 @@ league_oauth2_server:
 
 when@test:
     league_oauth2_server:
+        authorization_server:
+            access_token_ttl: PT1S
         persistence:
             in_memory: true
 
