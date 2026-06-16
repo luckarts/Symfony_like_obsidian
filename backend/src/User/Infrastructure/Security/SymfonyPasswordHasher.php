@@ -21,4 +21,18 @@ class SymfonyPasswordHasher implements PasswordHasherInterface
             ->getPasswordHasher(User::class)
             ->hash($plainPassword);
     }
+
+    public function verify(string $hashedPassword, string $plainPassword): bool
+    {
+        return $this->hasherFactory
+            ->getPasswordHasher(User::class)
+            ->verify($hashedPassword, $plainPassword);
+    }
+
+    public function needsRehash(string $hashedPassword): bool
+    {
+        return $this->hasherFactory
+            ->getPasswordHasher(User::class)
+            ->needsRehash($hashedPassword);
+    }
 }
