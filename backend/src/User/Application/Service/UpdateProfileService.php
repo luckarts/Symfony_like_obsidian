@@ -17,8 +17,7 @@ class UpdateProfileService
 
     public function update(User $user, UpdateProfileCommand $command): User
     {
-        $user->setFirstName($command->firstName);
-        $user->setLastName($command->lastName);
+        $user->updateProfile($command->firstName, $command->lastName);
 
         $this->userRepository->save($user);
 

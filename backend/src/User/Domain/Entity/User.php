@@ -77,23 +77,9 @@ class User implements PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
     public function getPassword(): string
     {
         return $this->password;
-    }
-
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-
-        return $this;
     }
 
     /**
@@ -111,29 +97,9 @@ class User implements PasswordAuthenticatedUserInterface
         return $roles;
     }
 
-    /**
-     * @param list<Role> $roles
-     */
-    public function setRoles(array $roles): self
-    {
-        $this->roles = array_map(
-            static fn (Role $role): string => $role->value,
-            $roles,
-        );
-
-        return $this;
-    }
-
     public function getFirstName(): string
     {
         return $this->firstName;
-    }
-
-    public function setFirstName(string $firstName): self
-    {
-        $this->firstName = $firstName;
-
-        return $this;
     }
 
     public function getLastName(): string
@@ -141,11 +107,10 @@ class User implements PasswordAuthenticatedUserInterface
         return $this->lastName;
     }
 
-    public function setLastName(string $lastName): self
+    public function updateProfile(string $firstName, string $lastName): void
     {
+        $this->firstName = $firstName;
         $this->lastName = $lastName;
-
-        return $this;
     }
 
     public function getCreatedAt(): \DateTimeImmutable
