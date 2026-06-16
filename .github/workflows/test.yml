@@ -1,0 +1,388 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Suite à lancer'
+        required: true
+        type: choice
+        options: [smoke, e2e, unit]
+        default: smoke
+      group:
+        description: 'Groupe PHPUnit (user, task...)'
+        required: false
+        default: 'user'
+
+# Annule le run push quand la PR s'ouvre sur la même branche source
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+
+  # ─── LEVEL 1 : Unit — chaque PR, ~20s ────────────────────────────────────
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run unit tests
+        run: php bin/phpunit --testsuite unit --no-coverage
+
+
+  # ─── LEVEL 2 : Smoke — PR uniquement, ~45s ────────────────────────────────
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: unit
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Cache PostgreSQL Docker image
+        id: docker-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-postgres-16-alpine
+
+      - name: Load or pull PostgreSQL image
+        run: |
+          if [ -f /tmp/docker-cache/postgres.tar ]; then
+            docker load < /tmp/docker-cache/postgres.tar
+          else
+            docker pull postgres:16-alpine
+            mkdir -p /tmp/docker-cache
+            docker save postgres:16-alpine -o /tmp/docker-cache/postgres.tar
+          fi
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_DB=app -e POSTGRES_USER=app -e POSTGRES_PASSWORD=test \
+            -p 5432:5432 postgres:16-alpine
+          until docker exec postgres pg_isready -U app; do sleep 1; done
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate OAuth2 keys
+        run: |
+          mkdir -p var/oauth
+          PASSPHRASE=$(openssl rand -base64 32)
+          openssl genrsa -out var/oauth/private.pem -passout pass:$PASSPHRASE 4096
+          openssl rsa -pubout -in var/oauth/private.pem -passin pass:$PASSPHRASE -out var/oauth/public.pem
+          echo "OAUTH_PASSPHRASE=$PASSPHRASE" >> $GITHUB_ENV
+
+      - name: Setup test database
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+          php bin/console doctrine:schema:create --env=test --no-interaction
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+
+      - name: Run smoke tests
+        run: |
+          # Skip gracefully if no tests are annotated @group smoke yet
+          if ! grep -rq '@group smoke' ../tests/ 2>/dev/null; then
+            echo "No smoke tests found — skipping"
+            exit 0
+          fi
+          php bin/phpunit --group smoke --no-coverage
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+          OAUTH_PRIVATE_KEY: ${{ github.workspace }}/backend/var/oauth/private.pem
+          OAUTH_PUBLIC_KEY: ${{ github.workspace }}/backend/var/oauth/public.pem
+          OAUTH_PASSPHRASE: ${{ env.OAUTH_PASSPHRASE }}
+          OAUTH_ENCRYPTION_KEY: ${{ secrets.OAUTH_ENCRYPTION_KEY }}
+
+
+  # ─── LEVEL 3a : Découverte des suites E2E ─────────────────────────────────
+  generate-matrix:
+    name: Discover E2E suites
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'pull_request'
+    outputs:
+      suites: ${{ steps.set-matrix.outputs.suites }}
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 0
+
+      - name: Discover suites from tests/E2E/
+        id: set-matrix
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD" 2>/dev/null || git diff --name-only HEAD~1 HEAD)
+
+          # Si infra modifiée → tout lancer
+          ALL=false
+          if echo "$CHANGED" | grep -qE "(composer\.lock|composer\.json|migrations/|config/|\.env)"; then
+            ALL=true
+          fi
+
+          suites=()
+          for dir in backend/tests/E2E/*/; do
+            [ -d "$dir" ] || continue
+            name=$(basename "$dir")
+            [[ "$name" == "Trait" ]] && continue
+            lower=$(echo "$name" | tr '[:upper:]' '[:lower:]')
+            if [[ "$ALL" == "true" ]] || \
+               echo "$CHANGED" | grep -qiE "(backend/src/$name/|backend/tests/E2E/$name/)"; then
+              suites+=("$lower")
+            fi
+          done
+
+          if [ ${#suites[@]} -eq 0 ]; then
+            echo "No E2E suite affected — skipping"
+            echo "suites=[]" >> $GITHUB_OUTPUT
+          else
+            json=$(printf '%s\n' "${suites[@]}" | jq -Rsc 'split("\n")[:-1]')
+            echo "suites=$json" >> $GITHUB_OUTPUT
+          fi
+
+
+  # ─── LEVEL 3b : E2E — PR uniquement, parallèle par BC ────────────────────
+  e2e:
+    name: E2E Tests (${{ matrix.suite }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: [unit, generate-matrix]
+    if: github.event_name == 'pull_request' && needs.generate-matrix.outputs.suites != '[]'
+    defaults:
+      run:
+        working-directory: backend
+
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: ${{ fromJson(needs.generate-matrix.outputs.suites) }}
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Cache PostgreSQL Docker image
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-postgres-16-alpine
+
+      - name: Load or pull PostgreSQL image
+        run: |
+          if [ -f /tmp/docker-cache/postgres.tar ]; then
+            docker load < /tmp/docker-cache/postgres.tar
+          else
+            docker pull postgres:16-alpine
+            mkdir -p /tmp/docker-cache
+            docker save postgres:16-alpine -o /tmp/docker-cache/postgres.tar
+          fi
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_DB=app -e POSTGRES_USER=app -e POSTGRES_PASSWORD=test \
+            -p 5432:5432 postgres:16-alpine
+          until docker exec postgres pg_isready -U app; do sleep 1; done
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate OAuth2 keys
+        run: |
+          mkdir -p var/oauth
+          PASSPHRASE=$(openssl rand -base64 32)
+          openssl genrsa -out var/oauth/private.pem -passout pass:$PASSPHRASE 4096
+          openssl rsa -pubout -in var/oauth/private.pem -passin pass:$PASSPHRASE -out var/oauth/public.pem
+          echo "OAUTH_PASSPHRASE=$PASSPHRASE" >> $GITHUB_ENV
+
+      - name: Setup test database
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+          php bin/console doctrine:schema:create --env=test --no-interaction
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+
+      - name: Run E2E suite — ${{ matrix.suite }}
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+          OAUTH_PRIVATE_KEY: ${{ github.workspace }}/backend/var/oauth/private.pem
+          OAUTH_PUBLIC_KEY: ${{ github.workspace }}/backend/var/oauth/public.pem
+          OAUTH_PASSPHRASE: ${{ env.OAUTH_PASSPHRASE }}
+          OAUTH_ENCRYPTION_KEY: ${{ secrets.OAUTH_ENCRYPTION_KEY }}
+          SUITE: ${{ matrix.suite }}
+        run: php bin/phpunit --testsuite E2E --group "$SUITE" --no-coverage
+
+
+  # ─── LEVEL 3c : Agrégateur — nom stable pour branch protection ───────────
+  e2e-success:
+    name: E2E Tests passed
+    runs-on: ubuntu-latest
+    permissions: {}
+    needs: e2e
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - name: Check E2E result
+        run: |
+          result="${{ needs.e2e.result }}"
+          if [[ "$result" == "success" || "$result" == "skipped" ]]; then
+            echo "E2E passed (result: $result)"
+          else
+            echo "E2E failed or was cancelled (result: $result)"
+            exit 1
+          fi
+
+
+  # ─── MANUAL — workflow_dispatch avec paramètres ────────────────────────────
+  manual:
+    name: Manual — ${{ github.event.inputs.suite }} (${{ github.event.inputs.group }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - uses: shivammathur/setup-php@44454db4f0199b8b9685a5d763dc37cbf79108e1  # v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Cache Composer
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: ~/.composer/cache
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: composer-
+
+      - name: Cache PostgreSQL Docker image
+        if: github.event.inputs.suite != 'unit'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-postgres-16-alpine
+
+      - name: Load or pull PostgreSQL image
+        if: github.event.inputs.suite != 'unit'
+        run: |
+          if [ -f /tmp/docker-cache/postgres.tar ]; then
+            docker load < /tmp/docker-cache/postgres.tar
+          else
+            docker pull postgres:16-alpine
+            mkdir -p /tmp/docker-cache
+            docker save postgres:16-alpine -o /tmp/docker-cache/postgres.tar
+          fi
+
+      - name: Start PostgreSQL
+        if: github.event.inputs.suite != 'unit'
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_DB=app -e POSTGRES_USER=app -e POSTGRES_PASSWORD=test \
+            -p 5432:5432 postgres:16-alpine
+          until docker exec postgres pg_isready -U app; do sleep 1; done
+
+      - run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Generate OAuth2 keys
+        if: github.event.inputs.suite != 'unit'
+        run: |
+          mkdir -p var/oauth
+          PASSPHRASE=$(openssl rand -base64 32)
+          openssl genrsa -out var/oauth/private.pem -passout pass:$PASSPHRASE 4096
+          openssl rsa -pubout -in var/oauth/private.pem -passin pass:$PASSPHRASE -out var/oauth/public.pem
+          echo "OAUTH_PASSPHRASE=$PASSPHRASE" >> $GITHUB_ENV
+
+      - name: Setup test database
+        if: github.event.inputs.suite != 'unit'
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+          php bin/console doctrine:schema:create --env=test --no-interaction
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+
+      - name: Run — ${{ github.event.inputs.suite }} / ${{ github.event.inputs.group }}
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql://app:test@127.0.0.1:5432/app
+          OAUTH_PRIVATE_KEY: ${{ github.workspace }}/backend/var/oauth/private.pem
+          OAUTH_PUBLIC_KEY: ${{ github.workspace }}/backend/var/oauth/public.pem
+          OAUTH_PASSPHRASE: ${{ env.OAUTH_PASSPHRASE }}
+          OAUTH_ENCRYPTION_KEY: ${{ secrets.OAUTH_ENCRYPTION_KEY }}
+          SUITE: ${{ github.event.inputs.suite }}
+          GROUP: ${{ github.event.inputs.group }}
+        run: |
+          case "$SUITE" in
+            unit)  php bin/phpunit --testsuite unit --no-coverage ;;
+            smoke) php bin/phpunit --group smoke --no-coverage ;;
+            e2e)   php bin/phpunit --testsuite E2E --group "$GROUP" --no-coverage ;;
+          esac

@@ -5,7 +5,11 @@
 
 ## Objectif
 
+<<<<<<< HEAD
 Boilerplate Symfony avec authentification OAuth2 complète — base pour construire une app style Obsidian.
+=======
+Boilerplate Symfony avec authentification OAuth2 complète — base.
+>>>>>>> b858629 (init project)
 
 | Phase | Statut | Contenu |
 |-------|--------|---------|
