@@ -28,26 +28,26 @@ use App\User\Infrastructure\ApiPlatform\State\Processor\UpdateProfileProcessor;
 )]
 class UserProfile
 {
-    public string $id = '';
-    public string $email = '';
-    public string $firstName = '';
-    public string $lastName = '';
-
-    /** @var list<string> */
-    public array $roles = [];
-
-    public string $createdAt = '';
+    /** @param list<string> $roles */
+    public function __construct(
+        public string $id = '',
+        public string $email = '',
+        public string $firstName = '',
+        public string $lastName = '',
+        public array $roles = [],
+        public string $createdAt = '',
+    ) {
+    }
 
     public static function fromEntity(User $user): self
     {
-        $profile = new self();
-        $profile->id = (string) $user->getId();
-        $profile->email = $user->getEmail();
-        $profile->firstName = $user->getFirstName();
-        $profile->lastName = $user->getLastName();
-        $profile->roles = $user->getRoles();
-        $profile->createdAt = $user->getCreatedAt()->format(\DateTimeInterface::ATOM);
-
-        return $profile;
+        return new self(
+            id: (string) $user->getId(),
+            email: $user->getEmail(),
+            firstName: $user->getFirstName(),
+            lastName: $user->getLastName(),
+            roles: $user->getRoles(),
+            createdAt: $user->getCreatedAt()->format(\DateTimeInterface::ATOM),
+        );
     }
 }
