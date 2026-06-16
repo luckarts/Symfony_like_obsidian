@@ -21,6 +21,7 @@ Pour vérifier que la requête SQL est correcte et que l'index en DB existe.
 class UniqueEmailTest extends KernelTestCase
 {
     private DoctrineUserRepository $repository;
+    private EntityManagerInterface $em;
     private Connection $connection;
 
     protected function setUp(): void
@@ -31,6 +32,7 @@ class UniqueEmailTest extends KernelTestCase
         $this->repository = $repository;
         /** @var EntityManagerInterface $em */
         $em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->em = $em;
         $this->connection = $em->getConnection();
         $this->connection->beginTransaction();
     }
@@ -49,6 +51,7 @@ class UniqueEmailTest extends KernelTestCase
     {
         $user = User::register('exists@integration-test.example.com', 'hashed', 'John', 'Doe');
         $this->repository->save($user);
+        $this->em->flush();
 
         $this->assertTrue($this->repository->existsByEmail('exists@integration-test.example.com'));
         $this->assertFalse($this->repository->existsByEmail('other@integration-test.example.com'));
@@ -59,10 +62,12 @@ class UniqueEmailTest extends KernelTestCase
     {
         $user1 = User::register('dup@integration-test.example.com', 'hashed1', 'Alice', 'A');
         $this->repository->save($user1);
+        $this->em->flush();
 
         $this->expectException(UniqueConstraintViolationException::class);
 
         $user2 = User::register('dup@integration-test.example.com', 'hashed2', 'Bob', 'B');
         $this->repository->save($user2);
+        $this->em->flush();
     }
 }

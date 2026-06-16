@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Tests\E2E\Trait;
+use Doctrine\ORM\EntityManagerInterface;
 use League\Bundle\OAuth2ServerBundle\Manager\ClientManagerInterface;
 use League\Bundle\OAuth2ServerBundle\Model\Client;
 use League\Bundle\OAuth2ServerBundle\ValueObject\Grant;
@@ -73,7 +74,13 @@ trait ApiTestHelper
             firstName: $firstName,
             lastName: $lastName,
         );
-        return $registrationService->register($command);
+        $user = $registrationService->register($command);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        $em->flush();
+
+        return $user;
     }
 
     protected function getOAuth2Token(
