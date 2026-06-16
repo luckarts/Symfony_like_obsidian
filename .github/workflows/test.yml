@@ -3,7 +3,11 @@ name: Tests
 on:
   push:
     branches: [main, develop]
+    paths:
+      - 'backend/**'
   pull_request:
+    paths:
+      - 'backend/**'
   workflow_dispatch:
     inputs:
       suite:
@@ -26,7 +30,7 @@ permissions: {}
 
 jobs:
 
-  # ─── LEVEL 1 : Unit — chaque PR, ~20s ────────────────────────────────────
+  # --- LEVEL 1 : Unit - chaque PR, ~20s ---
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -58,7 +62,7 @@ jobs:
         run: php bin/phpunit --testsuite unit --no-coverage
 
 
-  # ─── LEVEL 2 : Smoke — PR uniquement, ~45s ────────────────────────────────
+  # --- LEVEL 2 : Smoke - PR uniquement, ~45s ---
   smoke:
     name: Smoke Tests
     runs-on: ubuntu-latest
@@ -118,6 +122,7 @@ jobs:
           openssl genrsa -out var/oauth/private.pem -passout pass:$PASSPHRASE 4096
           openssl rsa -pubout -in var/oauth/private.pem -passin pass:$PASSPHRASE -out var/oauth/public.pem
           echo "OAUTH_PASSPHRASE=$PASSPHRASE" >> $GITHUB_ENV
+          echo "OAUTH_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> $GITHUB_ENV
 
       - name: Setup test database
         run: |
@@ -141,10 +146,10 @@ jobs:
           OAUTH_PRIVATE_KEY: ${{ github.workspace }}/backend/var/oauth/private.pem
           OAUTH_PUBLIC_KEY: ${{ github.workspace }}/backend/var/oauth/public.pem
           OAUTH_PASSPHRASE: ${{ env.OAUTH_PASSPHRASE }}
-          OAUTH_ENCRYPTION_KEY: ${{ secrets.OAUTH_ENCRYPTION_KEY }}
+          OAUTH_ENCRYPTION_KEY: ${{ env.OAUTH_ENCRYPTION_KEY }}
 
 
-  # ─── LEVEL 3a : Découverte des suites E2E ─────────────────────────────────
+  # --- LEVEL 3a : Decouverte des suites E2E ---
   generate-matrix:
     name: Discover E2E suites
     runs-on: ubuntu-latest
@@ -194,7 +199,7 @@ jobs:
           fi
 
 
-  # ─── LEVEL 3b : E2E — PR uniquement, parallèle par BC ────────────────────
+  # --- LEVEL 3b : E2E - PR uniquement, parallele par BC ---
   e2e:
     name: E2E Tests (${{ matrix.suite }})
     runs-on: ubuntu-latest
@@ -258,6 +263,7 @@ jobs:
           openssl genrsa -out var/oauth/private.pem -passout pass:$PASSPHRASE 4096
           openssl rsa -pubout -in var/oauth/private.pem -passin pass:$PASSPHRASE -out var/oauth/public.pem
           echo "OAUTH_PASSPHRASE=$PASSPHRASE" >> $GITHUB_ENV
+          echo "OAUTH_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> $GITHUB_ENV
 
       - name: Setup test database
         run: |
@@ -274,12 +280,12 @@ jobs:
           OAUTH_PRIVATE_KEY: ${{ github.workspace }}/backend/var/oauth/private.pem
           OAUTH_PUBLIC_KEY: ${{ github.workspace }}/backend/var/oauth/public.pem
           OAUTH_PASSPHRASE: ${{ env.OAUTH_PASSPHRASE }}
-          OAUTH_ENCRYPTION_KEY: ${{ secrets.OAUTH_ENCRYPTION_KEY }}
+          OAUTH_ENCRYPTION_KEY: ${{ env.OAUTH_ENCRYPTION_KEY }}
           SUITE: ${{ matrix.suite }}
         run: php bin/phpunit --testsuite E2E --group "$SUITE" --no-coverage
 
 
-  # ─── LEVEL 3c : Agrégateur — nom stable pour branch protection ───────────
+  # --- LEVEL 3c : Agregateur - nom stable pour branch protection ---
   e2e-success:
     name: E2E Tests passed
     runs-on: ubuntu-latest
@@ -298,7 +304,7 @@ jobs:
           fi
 
 
-  # ─── MANUAL — workflow_dispatch avec paramètres ────────────────────────────
+  # --- MANUAL - workflow_dispatch avec parametres ---
   manual:
     name: Manual — ${{ github.event.inputs.suite }} (${{ github.event.inputs.group }})
     runs-on: ubuntu-latest
@@ -360,6 +366,7 @@ jobs:
           openssl genrsa -out var/oauth/private.pem -passout pass:$PASSPHRASE 4096
           openssl rsa -pubout -in var/oauth/private.pem -passin pass:$PASSPHRASE -out var/oauth/public.pem
           echo "OAUTH_PASSPHRASE=$PASSPHRASE" >> $GITHUB_ENV
+          echo "OAUTH_ENCRYPTION_KEY=$(openssl rand -base64 32)" >> $GITHUB_ENV
 
       - name: Setup test database
         if: github.event.inputs.suite != 'unit'
@@ -377,7 +384,7 @@ jobs:
           OAUTH_PRIVATE_KEY: ${{ github.workspace }}/backend/var/oauth/private.pem
           OAUTH_PUBLIC_KEY: ${{ github.workspace }}/backend/var/oauth/public.pem
           OAUTH_PASSPHRASE: ${{ env.OAUTH_PASSPHRASE }}
-          OAUTH_ENCRYPTION_KEY: ${{ secrets.OAUTH_ENCRYPTION_KEY }}
+          OAUTH_ENCRYPTION_KEY: ${{ env.OAUTH_ENCRYPTION_KEY }}
           SUITE: ${{ github.event.inputs.suite }}
           GROUP: ${{ github.event.inputs.group }}
         run: |
