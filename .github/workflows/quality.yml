@@ -1,0 +1,95 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [main, master]
+    # Suppression du filtre paths pour déclencher sur toute PR
+  push:
+    branches: [main, master, develop]
+    # Ajout de develop + suppression du filtre paths
+
+jobs:
+  # Validation légère sur PR
+  quick-quality:
+    name: Quick Quality Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-quality-${{ hashFiles('backend/composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --no-scripts --optimize-autoloader
+
+      - name: ECS (dry-run)
+        run: vendor/bin/ecs check --no-progress
+        continue-on-error: true
+
+      - name: PHPStan (error-format github)
+        run: vendor/bin/phpstan analyse --error-format=github --no-progress --memory-limit=-1
+        continue-on-error: true
+
+  # Analyse complète uniquement sur branches principales
+  full-quality:
+    name: Full Quality Analysis
+    runs-on: ubuntu-latest
+    if: >
+      github.ref == 'refs/heads/main' ||
+      github.ref == 'refs/heads/master' ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.labels.*.name, 'quality-required'))
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: composer-full-quality-${{ hashFiles('backend/composer.lock') }}
+
+      - name: Cache Vendor
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor/
+          key: vendor-quality-${{ hashFiles('backend/composer.lock') }}
+
+      - name: Install dependencies
+        run: composer install --optimize-autoloader
+
+      - name: Full Quality Analysis
+        run: composer app:code-quality
+
+      - name: Upload Quality Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-report
+          path: |
+            backend/var/reports/
+            backend/*.xml
+            backend/*.json
