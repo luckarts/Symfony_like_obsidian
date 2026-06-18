@@ -11,6 +11,7 @@ use App\User\Application\Command\RegisterUserCommand;
 use App\User\Application\Service\UserRegistrationService;
 use App\User\Infrastructure\ApiPlatform\Resource\RegisterUserRequest;
 use App\User\Infrastructure\ApiPlatform\Resource\UserResource;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
@@ -21,6 +22,7 @@ class RegisterProcessor implements ProcessorInterface
     public function __construct(
         private readonly UserRegistrationService $registrationService,
         private readonly MessageBusInterface $messageBus,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -35,6 +37,8 @@ class RegisterProcessor implements ProcessorInterface
             firstName: $data->firstName,
             lastName: $data->lastName,
         ));
+
+        $this->entityManager->flush();
 
         $this->messageBus->dispatch(new SendVerificationEmailMessage(
             userId: (string) $user->getId(),
