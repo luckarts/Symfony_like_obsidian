@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Email\Service;
 use App\Email\Application\Service\EmailVerificationService;
 use App\User\Domain\Contract\UserRepositoryInterface;
 use App\User\Domain\Entity\User;
+use App\User\Domain\Exception\UserNotFoundException;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -82,8 +83,8 @@ class EmailVerificationServiceTest extends TestCase
             ->method('findById')
             ->willReturn(null);
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('User not found.');
+        $this->expectException(UserNotFoundException::class);
+        $this->expectExceptionMessage('User with id "non-existent" not found.');
 
         $this->service->verify('non-existent', 'test@example.com', new Request());
     }
