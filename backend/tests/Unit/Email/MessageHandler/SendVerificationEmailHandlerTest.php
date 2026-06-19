@@ -12,11 +12,10 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
 use SymfonyCasts\Bundle\VerifyEmail\Model\VerifyEmailSignatureComponents;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
-use Twig\Environment;
 
 #[Group('unit')]
 #[Group('email')]
@@ -25,7 +24,6 @@ class SendVerificationEmailHandlerTest extends TestCase
     private UserRepositoryInterface&MockObject $userRepository;
     private VerifyEmailHelperInterface&MockObject $verifyEmailHelper;
     private MailerInterface&MockObject $mailer;
-    private Environment&MockObject $twig;
     private SendVerificationEmailHandler $handler;
 
     protected function setUp(): void
@@ -33,12 +31,10 @@ class SendVerificationEmailHandlerTest extends TestCase
         $this->userRepository = $this->createMock(UserRepositoryInterface::class);
         $this->verifyEmailHelper = $this->createMock(VerifyEmailHelperInterface::class);
         $this->mailer = $this->createMock(MailerInterface::class);
-        $this->twig = $this->createMock(Environment::class);
         $this->handler = new SendVerificationEmailHandler(
             $this->userRepository,
             $this->verifyEmailHelper,
             $this->mailer,
-            $this->twig,
         );
     }
 
@@ -69,16 +65,10 @@ class SendVerificationEmailHandlerTest extends TestCase
             ->with('api_email_verify', 'user-123', 'test@example.com')
             ->willReturn($signatureComponents);
 
-        $this->twig
-            ->expects($this->once())
-            ->method('render')
-            ->with('emails/verify_email.html.twig', $this->arrayHasKey('signedUrl'))
-            ->willReturn('<html>email content</html>');
-
         $this->mailer
             ->expects($this->once())
             ->method('send')
-            ->with($this->isInstanceOf(Email::class));
+            ->with($this->isInstanceOf(TemplatedEmail::class));
 
         $this->handler->__invoke(new SendVerificationEmailMessage('user-123'));
     }
