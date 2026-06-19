@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\User\Domain\Entity;
 
+use App\Shared\Domain\Event\HasDomainEventsInterface;
 use App\User\Application\Trait\RecordsDomainEvents;
 use App\User\Domain\Enum\Role;
 use App\User\Domain\Event\UserRegisteredEvent;
@@ -17,7 +18,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
 #[ORM\HasLifecycleCallbacks]
-class User implements PasswordAuthenticatedUserInterface
+class User implements PasswordAuthenticatedUserInterface, HasDomainEventsInterface
 {
     use RecordsDomainEvents;
     #[ORM\Id]
