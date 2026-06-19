@@ -41,3 +41,7 @@ services:
     App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository:
         autowire: true
         autoconfigure: true
+
+    App\Shared\Infrastructure\Doctrine\DomainEventDispatchListener:
+        tags:
+            - { name: doctrine.event_listener, event: postFlush }
