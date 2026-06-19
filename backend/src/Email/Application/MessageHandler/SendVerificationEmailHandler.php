@@ -6,12 +6,11 @@ namespace App\Email\Application\MessageHandler;
 
 use App\Email\Application\Message\SendVerificationEmailMessage;
 use App\User\Domain\Contract\UserRepositoryInterface;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
-use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\Address;
 use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
-use Twig\Environment;
 
 #[AsMessageHandler]
 class SendVerificationEmailHandler
@@ -20,7 +19,6 @@ class SendVerificationEmailHandler
         private readonly UserRepositoryInterface $userRepository,
         private readonly VerifyEmailHelperInterface $verifyEmailHelper,
         private readonly MailerInterface $mailer,
-        private readonly Environment $twig,
     ) {
     }
 
@@ -42,13 +40,14 @@ class SendVerificationEmailHandler
             ],
         );
 
-        $email = (new Email())
+        $email = (new TemplatedEmail())
             ->to(new Address($user->getEmail(), $user->getFirstName().' '.$user->getLastName()))
             ->subject('Please confirm your email address')
-            ->html($this->twig->render('emails/verify_email.html.twig', [
+            ->htmlTemplate('emails/verify_email.html.twig')
+            ->context([
                 'signedUrl' => $signatureComponents->getSignedUrl(),
                 'expiresAt' => $signatureComponents->getExpiresAt(),
-            ]));
+            ]);
 
         $this->mailer->send($email);
     }
