@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Email\Infrastructure\Controller;
 
 use App\Email\Application\Service\EmailVerificationService;
+use App\User\Domain\Exception\UserNotFoundException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
+use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
 #[AsController]
 class EmailVerificationController
@@ -33,10 +35,10 @@ class EmailVerificationController
             $this->emailVerificationService->verify((string) $userId, (string) $userEmail, $request);
 
             return new JsonResponse(['message' => 'Email verified successfully.'], Response::HTTP_OK);
-        } catch (\RuntimeException $e) {
+        } catch (UserNotFoundException $e) {
             return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_NOT_FOUND);
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Invalid or expired verification link.'], Response::HTTP_BAD_REQUEST);
+        } catch (VerifyEmailExceptionInterface $e) {
+            return new JsonResponse(['error' => $e->getReason()], Response::HTTP_BAD_REQUEST);
         }
     }
 }
