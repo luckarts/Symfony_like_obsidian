@@ -11,7 +11,6 @@ use App\User\Application\Service\UserRegistrationService;
 use App\User\Infrastructure\ApiPlatform\Resource\RegisterUserRequest;
 use App\User\Infrastructure\ApiPlatform\Resource\UserResource;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * @implements ProcessorInterface<RegisterUserRequest, UserResource>
@@ -20,7 +19,6 @@ class RegisterProcessor implements ProcessorInterface
 {
     public function __construct(
         private readonly UserRegistrationService $registrationService,
-        private readonly MessageBusInterface $eventBus,
         private readonly EntityManagerInterface $entityManager,
     ) {
     }
@@ -38,10 +36,6 @@ class RegisterProcessor implements ProcessorInterface
         ));
 
         $this->entityManager->flush();
-
-        foreach ($user->pullDomainEvents() as $event) {
-            $this->eventBus->dispatch($event);
-        }
 
         return UserResource::fromEntity($user);
     }
