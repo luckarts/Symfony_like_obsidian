@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Tests\E2E\Trait;
+
 use Doctrine\ORM\EntityManagerInterface;
 use League\Bundle\OAuth2ServerBundle\Manager\ClientManagerInterface;
 use League\Bundle\OAuth2ServerBundle\Model\Client;
@@ -13,14 +14,18 @@ use App\User\Domain\Entity\User;
 use App\User\Application\Command\RegisterUserCommand;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Response;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
+use Lcobucci\JWT\Signer\Rsa\Sha256;
+use Ramsey\Uuid\Uuid;
 
 trait ApiTestHelper
 {
-   protected KernelBrowser $client;
-    
-    private const DEFAULT_PASSWORD = 'T3st!P@ss#Api42';
-    private const CLIENT_ID = 'test_client';
-    private const CLIENT_SECRET = 'test_secret';
+    protected KernelBrowser $client;
+
+    private const DEFAULT_PASSWORD = "T3st!P@ss#Api42";
+    private const CLIENT_ID = "test_client";
+    private const CLIENT_SECRET = "test_secret";
     private bool $oauthClientRegistered = false;
 
     /**
@@ -33,11 +38,20 @@ trait ApiTestHelper
         }
 
         /** @var ClientManagerInterface $clientManager */
-        $clientManager = static::getContainer()->get(ClientManagerInterface::class);
+        $clientManager = static::getContainer()->get(
+            ClientManagerInterface::class,
+        );
 
-        $oauthClient = new Client('Test Client', self::CLIENT_ID, self::CLIENT_SECRET);
-        $oauthClient->setGrants(new Grant('password'), new Grant('refresh_token'));
-        $oauthClient->setScopes(new Scope('email'), new Scope('profile'));
+        $oauthClient = new Client(
+            "Test Client",
+            self::CLIENT_ID,
+            self::CLIENT_SECRET,
+        );
+        $oauthClient->setGrants(
+            new Grant("password"),
+            new Grant("refresh_token"),
+        );
+        $oauthClient->setScopes(new Scope("email"), new Scope("profile"));
 
         $clientManager->save($oauthClient);
         $this->oauthClientRegistered = true;
@@ -47,10 +61,10 @@ trait ApiTestHelper
         return token
     */
     protected function authenticate(
-        string $email = 'test@example.com',
+        string $email = "test@example.com",
         string $password = self::DEFAULT_PASSWORD,
-        string $firstName = 'John',
-        string $lastName = 'Doe',
+        string $firstName = "John",
+        string $lastName = "Doe",
     ): string {
         $this->createUser($email, $password, $firstName, $lastName);
         return $this->getOAuth2Token($email, $password);
@@ -60,13 +74,15 @@ trait ApiTestHelper
         create User without http
     */
     protected function createUser(
-        string $email = 'test@example.com',
+        string $email = "test@example.com",
         string $password = self::DEFAULT_PASSWORD,
-        string $firstName = 'John',
-        string $lastName = 'Doe',
+        string $firstName = "John",
+        string $lastName = "Doe",
     ): User {
         /** @var UserRegistrationService $registrationService */
-        $registrationService = static::getContainer()->get(UserRegistrationService::class);
+        $registrationService = static::getContainer()->get(
+            UserRegistrationService::class,
+        );
 
         $command = new RegisterUserCommand(
             email: $email,
@@ -84,33 +100,79 @@ trait ApiTestHelper
     }
 
     protected function getOAuth2Token(
-        string $email = 'test@test.com',
+        string $email = "test@test.com",
         string $password = self::DEFAULT_PASSWORD,
     ): string {
         $this->setUpApiTestHelper();
 
-        $this->client->request('POST', '/oauth2/token', [
-            'grant_type'    => 'password',
-            'client_id'     => self::CLIENT_ID,
-            'client_secret' => self::CLIENT_SECRET,
-            'username'      => $email,
-            'password'      => $password,
-            'scope'         => 'email',
+        $this->client->request("POST", "/oauth2/token", [
+            "grant_type" => "password",
+            "client_id" => self::CLIENT_ID,
+            "client_secret" => self::CLIENT_SECRET,
+            "username" => $email,
+            "password" => $password,
+            "scope" => "email",
         ]);
 
         $response = $this->client->getResponse();
 
         if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException(sprintf(
-                'OAuth2 token request failed (%d): %s',
-                $response->getStatusCode(),
-                $response->getContent(),
-            ));
+            throw new \RuntimeException(
+                sprintf(
+                    "OAuth2 token request failed (%d): %s",
+                    $response->getStatusCode(),
+                    $response->getContent(),
+                ),
+            );
         }
 
         /** @var array{access_token: string} $data */
         $data = json_decode($response->getContent(), true);
-        return $data['access_token'];
+        return $data["access_token"];
+    }
+
+    /**
+     * @return string An expired OAuth2 access token (JWT) for the given user.
+     */
+    protected function forgeExpiredAccessToken(
+        string $userId,
+        string $clientId = self::CLIENT_ID,
+    ): string {
+        $this->setUpApiTestHelper();
+
+        /** @var string $projectDir */
+        $projectDir = static::getContainer()->get("kernel")->getProjectDir();
+        $privateKeyPath = $projectDir . "/var/oauth/private.pem";
+        if (!file_exists($privateKeyPath)) {
+            throw new \RuntimeException(
+                sprintf("Private key not found at %s", $privateKeyPath),
+            );
+        }
+        $privateKey = file_get_contents($privateKeyPath);
+
+        $this->jwtConfiguration = Configuration::forAsymmetricSigner(
+            new Sha256(),
+            InMemory::plainText($privateKey, ""),
+            InMemory::plainText("empty", "empty"),
+        );
+
+        $now = new \DateTimeImmutable();
+        $token = $this->jwtConfiguration
+            ->builder()
+            ->issuedBy("http://localhost")
+            ->permittedFor($clientId)
+            ->identifiedBy((string) Uuid::uuid4())
+            ->issuedAt($now->modify("-1 hour"))
+            ->canOnlyBeUsedAfter($now->modify("-1 hour"))
+            ->expiresAt($now->modify("-1 second"))
+            ->relatedTo($userId)
+            ->withClaim("scopes", ["email"])
+            ->getToken(
+                $this->jwtConfiguration->signer(),
+                $this->jwtConfiguration->signingKey(),
+            );
+
+        return $token->toString();
     }
     /**
      * @param array<string, mixed> $data
@@ -120,12 +182,12 @@ trait ApiTestHelper
         string $uri,
         ?string $token = null,
         array $data = [],
-        string $contentType = 'application/ld+json',
+        string $contentType = "application/ld+json",
     ): Response {
-        $headers = ['CONTENT_TYPE' => $contentType];
+        $headers = ["CONTENT_TYPE" => $contentType];
 
         if ($token !== null) {
-            $headers['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
+            $headers["HTTP_AUTHORIZATION"] = "Bearer " . $token;
         }
 
         $body = $data !== [] ? json_encode($data) : null;
@@ -134,5 +196,4 @@ trait ApiTestHelper
 
         return $this->client->getResponse();
     }
-
 }
