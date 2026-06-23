@@ -4,23 +4,25 @@ declare(strict_types=1);
 
 namespace App\User\Domain\Entity;
 
+use App\Shared\Domain\Event\HasDomainEventsInterface;
+use App\User\Application\Trait\RecordsDomainEvents;
 use App\User\Domain\Enum\Role;
+use App\User\Domain\Event\UserRegisteredEvent;
 use App\User\Infrastructure\Doctrine\DoctrineUserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: DoctrineUserRepository::class)]
 #[ORM\Table(name: 'users')]
 #[ORM\UniqueConstraint(name: 'uniq_users_email', columns: ['email'])]
 #[ORM\HasLifecycleCallbacks]
-class User implements PasswordAuthenticatedUserInterface
+class User implements PasswordAuthenticatedUserInterface, HasDomainEventsInterface
 {
+    use RecordsDomainEvents;
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME)]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
     private ?string $id = null;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
@@ -38,6 +40,9 @@ class User implements PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'string', length: 100)]
     private string $lastName;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isVerified = false;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private \DateTimeImmutable $createdAt;
@@ -58,11 +63,18 @@ class User implements PasswordAuthenticatedUserInterface
         string $lastName,
     ): self {
         $user = new self();
+        $user->id = (string) Uuid::v7();
         $user->email = $email;
         $user->password = $hashedPassword;
         $user->firstName = $firstName;
         $user->lastName = $lastName;
         $user->roles = [Role::ROLE_USER->value];
+
+        $user->recordEvent(new UserRegisteredEvent(
+            userId: (string) $user->id,
+            email: $user->email,
+            registeredAt: new \DateTimeImmutable(),
+        ));
 
         return $user;
     }
@@ -111,6 +123,16 @@ class User implements PasswordAuthenticatedUserInterface
     {
         $this->firstName = $firstName;
         $this->lastName = $lastName;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function verify(): void
+    {
+        $this->isVerified = true;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

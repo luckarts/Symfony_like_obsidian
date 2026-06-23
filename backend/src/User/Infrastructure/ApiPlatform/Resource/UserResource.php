@@ -15,6 +15,7 @@ class UserResource
         public readonly string $lastName,
         /** @var list<string> */
         public readonly array $roles,
+        public readonly bool $isVerified,
         public readonly \DateTimeImmutable $createdAt,
         public readonly \DateTimeImmutable $updatedAt,
     ) {
@@ -28,6 +29,7 @@ class UserResource
             firstName: $user->getFirstName(),
             lastName: $user->getLastName(),
             roles: $user->getRoles(),
+            isVerified: $user->isVerified(),
             createdAt: $user->getCreatedAt(),
             updatedAt: $user->getUpdatedAt(),
         );

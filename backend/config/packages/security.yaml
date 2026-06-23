@@ -20,6 +20,8 @@ security:
             oauth2: true
 
     access_control:
+        - { path: ^/api/email/verify, roles: PUBLIC_ACCESS }
+        - { path: ^/api/email/resend-verification, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/auth/token, roles: PUBLIC_ACCESS }
         - { path: ^/api/users, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

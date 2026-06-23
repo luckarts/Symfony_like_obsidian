@@ -19,3 +19,12 @@ framework:
         transports:
             sync: 'sync://'
             async: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+        routing:
+            'App\Email\Application\Message\SendVerificationEmailMessage': async
+
+when@test:
+    framework:
+        messenger:
+            routing:
+                'App\Email\Application\Message\SendVerificationEmailMessage': sync
