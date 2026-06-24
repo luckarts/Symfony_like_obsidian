@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Auth\Infrastructure\Doctrine;
 
+use App\Auth\Domain\Contract\SecurityEventCollection;
 use App\Auth\Domain\Contract\SecurityEventRepositoryInterface;
 use App\Auth\Domain\Entity\SecurityEvent;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -29,8 +30,7 @@ class DoctrineSecurityEventRepository extends ServiceEntityRepository implements
         }
     }
 
-    /** @return Paginator<SecurityEvent> */
-    public function findByUserId(string $userId, int $page = 1, int $limit = 20): Paginator
+    public function findByUserId(string $userId, int $page = 1, int $limit = 20): SecurityEventCollection
     {
         $query = $this->createQueryBuilder('e')
             ->andWhere('e.userId = :userId')
@@ -40,6 +40,13 @@ class DoctrineSecurityEventRepository extends ServiceEntityRepository implements
             ->setMaxResults($limit)
             ->getQuery();
 
-        return new Paginator($query);
+        $paginator = new Paginator($query);
+
+        return new SecurityEventCollection(
+            items: iterator_to_array($paginator),
+            totalItems: (int) $paginator->count(),
+            currentPage: $page,
+            itemsPerPage: $limit,
+        );
     }
 }

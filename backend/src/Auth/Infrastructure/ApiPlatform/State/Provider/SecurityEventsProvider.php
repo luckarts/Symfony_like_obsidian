@@ -35,22 +35,22 @@ class SecurityEventsProvider implements ProviderInterface
         $page = (int) ($context['request']->query->get('page', 1));
         $limit = min((int) ($context['request']->query->get('itemsPerPage', 20)), 100);
 
-        $paginator = $this->repository->findByUserId(
+        $collection = $this->repository->findByUserId(
             (string) $user->getUser()->getId(),
             $page,
             $limit,
         );
 
         $resources = [];
-        foreach ($paginator as $event) {
+        foreach ($collection->getItems() as $event) {
             $resources[] = SecurityEventResource::fromEntity($event);
         }
 
         return new TraversablePaginator(
             new \ArrayIterator($resources),
-            (float) $page,
-            (float) $limit,
-            (float) $paginator->count(),
+            (float) $collection->getCurrentPage(),
+            (float) $collection->getItemsPerPage(),
+            (float) $collection->getTotalItems(),
         );
     }
 }
