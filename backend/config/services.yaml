@@ -45,3 +45,7 @@ services:
     App\Shared\Infrastructure\Doctrine\DomainEventDispatchListener:
         tags:
             - { name: doctrine.event_listener, event: postFlush }
+
+    # --- Auth contract bindings ---
+    App\Auth\Domain\Contract\SecurityEventRepositoryInterface:
+        alias: App\Auth\Infrastructure\Doctrine\DoctrineSecurityEventRepository

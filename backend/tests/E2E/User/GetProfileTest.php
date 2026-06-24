@@ -60,11 +60,8 @@ class GetProfileTest extends AbstractApiTestCase
         $email = 'profile_expired_' . uniqid() . '@example.com';
         $password = 'T3st!P@ss#Api42';
 
-        $this->createUser($email, $password, 'Alice', 'Smith');
-        $token = $this->getOAuth2Token($email, $password);
-
-        // access_token_ttl is overridden to PT1S in when@test config.
-        sleep(2);
+        $user = $this->createUser($email, $password, 'Alice', 'Smith');
+        $token = $this->forgeExpiredAccessToken((string) $user->getId());
 
         $this->apiRequest('GET', '/api/users/{id}', $token);
 
