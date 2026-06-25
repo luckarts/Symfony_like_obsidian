@@ -5,16 +5,18 @@ declare(strict_types=1);
 namespace App\Shared\Infrastructure\Symfony\EventListener;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
-use App\Shared\Infrastructure\RateLimiter\RateLimiterFactoryInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 final class RateLimitSubscriber implements EventSubscriberInterface
 {
     public function __construct(
+        #[Autowire(service: 'limiter.api_default')]
         private RateLimiterFactoryInterface $apiDefaultLimiter,
         private TokenStorageInterface $tokenStorage,
     ) {
