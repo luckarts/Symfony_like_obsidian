@@ -1,4 +1,7 @@
 services:
+    limiter.storage.in_memory:
+        class: Symfony\Component\RateLimiter\Storage\InMemoryStorage
+
     App\Auth\Infrastructure\OAuth2\TestClientManagerSetup:
         tags:
             - { name: kernel.event_listener, event: kernel.request, method: setupTestClient, priority: 1000 }

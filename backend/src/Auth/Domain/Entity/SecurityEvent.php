@@ -92,6 +92,23 @@ class SecurityEvent
         );
     }
 
+    public static function loginBlocked(
+        string $reason,
+        ?string $emailAttempted,
+        ?string $ip,
+        ?string $userAgent,
+        ?string $userId = null,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::LOGIN_BLOCKED,
+            userId: $userId,
+            emailAttempted: $emailAttempted,
+            reason: $reason,
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
     public function getId(): string
     {
         return $this->id;
