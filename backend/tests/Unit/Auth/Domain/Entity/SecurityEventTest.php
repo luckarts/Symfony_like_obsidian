@@ -56,4 +56,52 @@ class SecurityEventTest extends TestCase
         self::assertNull($event->getUserAgent());
         self::assertNull($event->getUserId());
     }
+
+    public function testTokenRefreshedFactory(): void
+    {
+        $userId = '123e4567-e89b-12d3-a456-426614174000';
+        $ip = '192.168.1.1';
+        $userAgent = 'Mozilla/5.0';
+
+        $event = SecurityEvent::tokenRefreshed($userId, $ip, $userAgent);
+
+        self::assertSame(SecurityEventType::TOKEN_REFRESH, $event->getEventType());
+        self::assertSame($userId, $event->getUserId());
+        self::assertSame($ip, $event->getIp());
+        self::assertSame($userAgent, $event->getUserAgent());
+        self::assertNull($event->getEmailAttempted());
+        self::assertNull($event->getReason());
+    }
+
+    public function testTokenReuseDetectedFactory(): void
+    {
+        $userId = '123e4567-e89b-12d3-a456-426614174000';
+        $ip = '192.168.1.1';
+        $userAgent = 'Mozilla/5.0';
+
+        $event = SecurityEvent::tokenReuseDetected($userId, $ip, $userAgent);
+
+        self::assertSame(SecurityEventType::TOKEN_REUSE_DETECTED, $event->getEventType());
+        self::assertSame($userId, $event->getUserId());
+        self::assertSame($ip, $event->getIp());
+        self::assertSame($userAgent, $event->getUserAgent());
+        self::assertNull($event->getEmailAttempted());
+        self::assertSame('refresh_token_reuse', $event->getReason());
+    }
+
+    public function testTokenRevokedFactory(): void
+    {
+        $userId = '123e4567-e89b-12d3-a456-426614174000';
+        $ip = '192.168.1.1';
+        $userAgent = 'Mozilla/5.0';
+
+        $event = SecurityEvent::tokenRevoked($userId, $ip, $userAgent);
+
+        self::assertSame(SecurityEventType::TOKEN_REVOKED, $event->getEventType());
+        self::assertSame($userId, $event->getUserId());
+        self::assertSame($ip, $event->getIp());
+        self::assertSame($userAgent, $event->getUserAgent());
+        self::assertNull($event->getEmailAttempted());
+        self::assertNull($event->getReason());
+    }
 }

@@ -9,4 +9,7 @@ enum SecurityEventType: string
     case LOGIN_SUCCESS = 'login_success';
     case LOGIN_FAILED = 'login_failed';
     case LOGIN_BLOCKED = 'login_blocked';
+    case TOKEN_REFRESH = 'token_refresh';
+    case TOKEN_REUSE_DETECTED = 'token_reuse_detected';
+    case TOKEN_REVOKED = 'token_revoked';
 }
