@@ -8,4 +8,5 @@ enum SecurityEventType: string
 {
     case LOGIN_SUCCESS = 'login_success';
     case LOGIN_FAILED = 'login_failed';
+    case LOGIN_BLOCKED = 'login_blocked';
 }
