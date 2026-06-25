@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Auth\Security\OAuth2;
 
+use App\Auth\Application\Service\LoginThrottleGuard;
 use App\Auth\Domain\Contract\SecurityEventRepositoryInterface;
 use App\Auth\Domain\Entity\SecurityEvent;
 use App\Auth\Domain\Enum\SecurityEventType;
+use App\Auth\Domain\Exception\BruteForceLockedException;
 use App\Auth\Security\OAuth2\OAuth2UserResolveListener;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\Security\SecurityUser;
@@ -14,6 +16,7 @@ use App\User\Infrastructure\Security\UserProvider;
 use League\Bundle\OAuth2ServerBundle\Event\UserResolveEvent;
 use League\Bundle\OAuth2ServerBundle\Model\Client;
 use League\Bundle\OAuth2ServerBundle\ValueObject\Grant;
+use League\OAuth2\Server\Exception\OAuthServerException;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -32,6 +35,7 @@ class OAuth2UserResolveListenerTest extends TestCase
     private UserPasswordHasherInterface&MockObject $passwordHasher;
     private LoggerInterface&MockObject $securityLogger;
     private SecurityEventRepositoryInterface&MockObject $securityEventRepository;
+    private LoginThrottleGuard&MockObject $loginThrottleGuard;
     private OAuth2UserResolveListener $listener;
 
     protected function setUp(): void
@@ -40,6 +44,7 @@ class OAuth2UserResolveListenerTest extends TestCase
         $this->passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $this->securityLogger = $this->createMock(LoggerInterface::class);
         $this->securityEventRepository = $this->createMock(SecurityEventRepositoryInterface::class);
+        $this->loginThrottleGuard = $this->createMock(LoginThrottleGuard::class);
 
         $requestStack = new RequestStack();
         $requestStack->push(Request::create('/oauth2/token', 'POST', server: [
@@ -53,6 +58,7 @@ class OAuth2UserResolveListenerTest extends TestCase
             $this->securityLogger,
             $this->securityEventRepository,
             $requestStack,
+            $this->loginThrottleGuard,
         );
     }
 
@@ -61,9 +67,20 @@ class OAuth2UserResolveListenerTest extends TestCase
     {
         $username = 'ghost@example.com';
 
+        $this->loginThrottleGuard
+            ->expects($this->once())
+            ->method('assertNotLocked')
+            ->with($username, '203.0.113.7');
+
         $this->userProvider
+            ->expects($this->once())
             ->method('loadUserByIdentifier')
             ->willThrowException(new UserNotFoundException());
+
+        $this->loginThrottleGuard
+            ->expects($this->once())
+            ->method('recordFailure')
+            ->with($username, '203.0.113.7');
 
         $this->securityLogger
             ->expects($this->once())
@@ -93,12 +110,23 @@ class OAuth2UserResolveListenerTest extends TestCase
         $securityUser = new SecurityUser($user);
         $username = 'known@example.com';
 
+        $this->loginThrottleGuard
+            ->expects($this->once())
+            ->method('assertNotLocked')
+            ->with($username, '203.0.113.7');
+
         $this->userProvider
+            ->expects($this->once())
             ->method('loadUserByIdentifier')
             ->willReturn($securityUser);
         $this->passwordHasher
             ->method('isPasswordValid')
             ->willReturn(false);
+
+        $this->loginThrottleGuard
+            ->expects($this->once())
+            ->method('recordFailure')
+            ->with($username, '203.0.113.7');
 
         $this->securityLogger
             ->expects($this->once())
@@ -127,12 +155,23 @@ class OAuth2UserResolveListenerTest extends TestCase
         $user = User::register('valid@example.com', 'hashed', 'Jane', 'Doe');
         $securityUser = new SecurityUser($user);
 
+        $this->loginThrottleGuard
+            ->expects($this->once())
+            ->method('assertNotLocked')
+            ->with('valid@example.com', '203.0.113.7');
+
         $this->userProvider
+            ->expects($this->once())
             ->method('loadUserByIdentifier')
             ->willReturn($securityUser);
         $this->passwordHasher
             ->method('isPasswordValid')
             ->willReturn(true);
+
+        $this->loginThrottleGuard
+            ->expects($this->once())
+            ->method('recordSuccess')
+            ->with('valid@example.com');
 
         $this->securityLogger
             ->expects($this->once())
@@ -152,6 +191,52 @@ class OAuth2UserResolveListenerTest extends TestCase
         $this->listener->__invoke($event);
 
         $this->assertSame($securityUser, $event->getUser());
+    }
+
+    #[Test]
+    public function locked_axis_blocks_before_any_user_lookup_and_throws_generic_429(): void
+    {
+        $username = 'victim@example.com';
+
+        $this->loginThrottleGuard
+            ->expects($this->once())
+            ->method('assertNotLocked')
+            ->with($username, '203.0.113.7')
+            ->willThrowException(new BruteForceLockedException(60, 'rate_limited_identifier'));
+
+        $this->userProvider
+            ->expects($this->never())
+            ->method('loadUserByIdentifier');
+
+        $this->loginThrottleGuard
+            ->expects($this->never())
+            ->method('recordFailure');
+
+        $this->securityLogger
+            ->expects($this->once())
+            ->method('warning')
+            ->with('login_blocked', $this->callback(fn (array $context) => 'rate_limited_identifier' === $context['reason'] && null === $context['userId'] && $username === $context['emailAttempted']));
+
+        $this->securityEventRepository
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->callback(function (SecurityEvent $event) use ($username) {
+                return SecurityEventType::LOGIN_BLOCKED === $event->getEventType()
+                    && 'rate_limited_identifier' === $event->getReason()
+                    && $username === $event->getEmailAttempted();
+            }));
+
+        $event = $this->makeEvent($username, 'irrelevant');
+
+        try {
+            $this->listener->__invoke($event);
+            $this->fail('Expected OAuthServerException to be thrown.');
+        } catch (OAuthServerException $exception) {
+            $this->assertSame(429, $exception->getHttpStatusCode());
+            $this->assertSame('slow_down', $exception->getErrorType());
+            $this->assertStringNotContainsString('identifier', (string) $exception->getHint());
+            $this->assertStringNotContainsString('ip', (string) $exception->getHint());
+        }
     }
 
     private function makeEvent(string $username, string $password): UserResolveEvent

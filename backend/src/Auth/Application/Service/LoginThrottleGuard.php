@@ -8,7 +8,7 @@ use App\Auth\Domain\Exception\BruteForceLockedException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 
-final class LoginThrottleGuard
+class LoginThrottleGuard
 {
     public function __construct(
         #[Autowire(service: 'limiter.login_ip')]
