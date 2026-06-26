@@ -28,10 +28,12 @@ class LoginUserTest extends WebTestCase
 
         /** @var ClientManagerInterface $clientManager */
         $clientManager = static::getContainer()->get(ClientManagerInterface::class);
-        $oauthClient = new Client('Test Client', self::CLIENT_ID, self::CLIENT_SECRET);
-        $oauthClient->setGrants(new Grant('password'), new Grant('refresh_token'));
-        $oauthClient->setScopes(new Scope('email'), new Scope('profile'));
-        $clientManager->save($oauthClient);
+        if ($clientManager->find(self::CLIENT_ID) === null) {
+            $oauthClient = new Client('Test Client', self::CLIENT_ID, self::CLIENT_SECRET);
+            $oauthClient->setGrants(new Grant('password'), new Grant('refresh_token'));
+            $oauthClient->setScopes(new Scope('email'), new Scope('profile'));
+            $clientManager->save($oauthClient);
+        }
     }
 
     #[Test]

@@ -49,3 +49,8 @@ services:
     # --- Auth contract bindings ---
     App\Auth\Domain\Contract\SecurityEventRepositoryInterface:
         alias: App\Auth\Infrastructure\Doctrine\DoctrineSecurityEventRepository
+
+    # Override the RefreshTokenReuseSubscriber to set the encryption key via bind
+    App\Auth\Infrastructure\Symfony\EventListener\RefreshTokenReuseSubscriber:
+        bind:
+            $encryptionKey: '%env(OAUTH_ENCRYPTION_KEY)%'

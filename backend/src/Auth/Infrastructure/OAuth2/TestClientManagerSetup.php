@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Auth\Infrastructure\OAuth2;
 
-use League\Bundle\OAuth2ServerBundle\Manager\InMemory\ClientManager;
+use League\Bundle\OAuth2ServerBundle\Manager\ClientManagerInterface;
 use League\Bundle\OAuth2ServerBundle\Model\Client;
 use League\Bundle\OAuth2ServerBundle\ValueObject\Grant;
 use League\Bundle\OAuth2ServerBundle\ValueObject\Scope;
@@ -16,7 +16,7 @@ final class TestClientManagerSetup
     private bool $initialized = false;
 
     public function __construct(
-        private readonly ClientManager $clientManager,
+        private readonly ClientManagerInterface $clientManager,
         #[Autowire(env: 'OAUTH_DEFAULT_CLIENT_ID')]
         private readonly string $clientId,
         #[Autowire(env: 'OAUTH_DEFAULT_CLIENT_SECRET')]

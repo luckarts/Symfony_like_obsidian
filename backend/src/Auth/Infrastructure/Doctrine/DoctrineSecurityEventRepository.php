@@ -49,4 +49,17 @@ class DoctrineSecurityEventRepository extends ServiceEntityRepository implements
             itemsPerPage: $limit,
         );
     }
+
+    public function findRecentRevokedByUserAndReason(string $userId, string $reason): ?SecurityEvent
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.userId = :userId')
+            ->andWhere('e.reason = :reason')
+            ->orderBy('e.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->setParameter('userId', $userId)
+            ->setParameter('reason', $reason)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

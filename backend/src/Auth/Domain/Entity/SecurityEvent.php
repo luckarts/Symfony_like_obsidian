@@ -109,6 +109,52 @@ class SecurityEvent
         );
     }
 
+    public static function tokenRefreshed(
+        string $userId,
+        ?string $ip,
+        ?string $userAgent,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::TOKEN_REFRESH,
+            userId: $userId,
+            emailAttempted: null,
+            reason: null,
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
+    public static function tokenReuseDetected(
+        string $userId,
+        ?string $ip,
+        ?string $userAgent,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::TOKEN_REUSE_DETECTED,
+            userId: $userId,
+            emailAttempted: null,
+            reason: 'refresh_token_reuse',
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
+    public static function tokenRevoked(
+        string $userId,
+        ?string $ip,
+        ?string $userAgent,
+        ?string $reason = null,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::TOKEN_REVOKED,
+            userId: $userId,
+            emailAttempted: null,
+            reason: $reason,
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
     public function getId(): string
     {
         return $this->id;

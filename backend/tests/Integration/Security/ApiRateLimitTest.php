@@ -29,10 +29,12 @@ class ApiRateLimitTest extends WebTestCase
         $this->client->disableReboot();
 
         $clientManager = static::getContainer()->get(ClientManagerInterface::class);
-        $oauthClient = new Client('ApiRateLimitTest', self::CLIENT_ID, self::CLIENT_SECRET);
-        $oauthClient->setGrants(new Grant('password'), new Grant('refresh_token'));
-        $oauthClient->setScopes(new Scope('email'), new Scope('profile'));
-        $clientManager->save($oauthClient);
+        if ($clientManager->find(self::CLIENT_ID) === null) {
+            $oauthClient = new Client('ApiRateLimitTest', self::CLIENT_ID, self::CLIENT_SECRET);
+            $oauthClient->setGrants(new Grant('password'), new Grant('refresh_token'));
+            $oauthClient->setScopes(new Scope('email'), new Scope('profile'));
+            $clientManager->save($oauthClient);
+        }
     }
 
     private function obtainToken(): string
