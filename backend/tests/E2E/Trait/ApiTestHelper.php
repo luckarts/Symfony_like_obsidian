@@ -42,6 +42,12 @@ trait ApiTestHelper
             ClientManagerInterface::class,
         );
 
+        if ($clientManager->find(self::CLIENT_ID) !== null) {
+            $this->oauthClientRegistered = true;
+
+            return;
+        }
+
         $oauthClient = new Client(
             "Test Client",
             self::CLIENT_ID,
