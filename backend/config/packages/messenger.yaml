@@ -22,9 +22,11 @@ framework:
 
         routing:
             'App\Email\Application\Message\SendVerificationEmailMessage': async
+            'App\User\Application\Message\SendPasswordResetEmailMessage': async
 
 when@test:
     framework:
         messenger:
             routing:
                 'App\Email\Application\Message\SendVerificationEmailMessage': sync
+                'App\User\Application\Message\SendPasswordResetEmailMessage': sync

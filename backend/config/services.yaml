@@ -53,6 +53,10 @@ services:
     App\Auth\Domain\Contract\SecurityEventRepositoryInterface:
         alias: App\Auth\Infrastructure\Doctrine\DoctrineSecurityEventRepository
 
+    App\User\Application\MessageHandler\SendPasswordResetEmailHandler:
+        bind:
+            $frontendUrl: '%env(FRONTEND_URL)%'
+
     # Override the RefreshTokenReuseSubscriber to set the encryption key via bind
     App\Auth\Infrastructure\Symfony\EventListener\RefreshTokenReuseSubscriber:
         bind:
