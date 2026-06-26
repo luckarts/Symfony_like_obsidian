@@ -184,6 +184,7 @@ class SecurityEvent
             userAgent: $userAgent,
         );
     }
+
     public function getId(): string
     {
         return $this->id;
