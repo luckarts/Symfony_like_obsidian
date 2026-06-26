@@ -70,6 +70,14 @@ final class RefreshTokenReuseSubscriber implements EventSubscriberInterface
             // Ensure userId is string for consistency
             $userId = (string) $userId;
 
+            // If token was revoked via session endpoint (not rotation reuse), skip revokeAll
+            $recentRevoke = $this->securityEventRepository->findRecentRevokedByUserAndReason($userId, 'session_revoke');
+            if ($recentRevoke !== null) {
+                $this->logger->info('Refresh token reuse skipped: token was legitimately revoked via session endpoint');
+
+                return;
+            }
+
             $ip = $request->getClientIp();
             $userAgent = $request->headers->get('User-Agent');
 

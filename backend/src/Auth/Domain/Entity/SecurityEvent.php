@@ -143,12 +143,13 @@ class SecurityEvent
         string $userId,
         ?string $ip,
         ?string $userAgent,
+        ?string $reason = null,
     ): self {
         return new self(
             eventType: SecurityEventType::TOKEN_REVOKED,
             userId: $userId,
             emailAttempted: null,
-            reason: null,
+            reason: $reason,
             ip: $ip,
             userAgent: $userAgent,
         );
