@@ -94,6 +94,11 @@ class User implements PasswordAuthenticatedUserInterface, HasDomainEventsInterfa
         return $this->password;
     }
 
+    public function setPassword(string $hashedPassword): void
+    {
+        $this->password = $hashedPassword;
+    }
+
     /**
      * @return list<string>
      */

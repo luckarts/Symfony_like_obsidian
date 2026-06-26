@@ -38,6 +38,9 @@ services:
     App\User\Domain\Contract\PasswordHasherInterface:
         alias: App\User\Infrastructure\Security\SymfonyPasswordHasher
 
+    App\User\Domain\Contract\PasswordResetRequestRepositoryInterface:
+        alias: App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository
+
     App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository:
         autowire: true
         autoconfigure: true
