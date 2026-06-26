@@ -7,11 +7,10 @@ namespace App\Auth\Infrastructure\Symfony\EventListener;
 use App\Auth\Application\Service\TokenRevocationService;
 use App\Auth\Domain\Contract\SecurityEventRepositoryInterface;
 use App\Auth\Domain\Entity\SecurityEvent;
-use League\OAuth2\Server\Exception\OAuthServerException;
+use App\User\Domain\Contract\UserRepositoryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -22,6 +21,7 @@ final class RefreshTokenReuseSubscriber implements EventSubscriberInterface
     public function __construct(
         private readonly TokenRevocationService $tokenRevocationService,
         private readonly SecurityEventRepositoryInterface $securityEventRepository,
+        private readonly UserRepositoryInterface $userRepository,
         private readonly LoggerInterface $logger,
         private readonly string $encryptionKey,
     ) {
@@ -30,23 +30,26 @@ final class RefreshTokenReuseSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::EXCEPTION => 'onKernelException',
+            KernelEvents::RESPONSE => 'onKernelResponse',
         ];
     }
 
-    public function onKernelException(ExceptionEvent $event): void
+    public function onKernelResponse(ResponseEvent $event): void
     {
-        $exception = $event->getThrowable();
-        if (!$exception instanceof OAuthServerException) {
-            return;
-        }
-
-        if ($exception->getHint() !== 'Token has been revoked') {
-            return;
-        }
-
         $request = $event->getRequest();
+        $response = $event->getResponse();
+
         if ($request->getPathInfo() !== '/oauth2/token' || !$request->isMethod('POST')) {
+            return;
+        }
+
+        $response = $event->getResponse();
+        if ($response->getStatusCode() !== 400) {
+            return;
+        }
+
+        $body = json_decode((string) $response->getContent(), true);
+        if (!isset($body['hint']) || $body['hint'] !== 'Token has been revoked') {
             return;
         }
 
@@ -60,15 +63,20 @@ final class RefreshTokenReuseSubscriber implements EventSubscriberInterface
             $data = json_decode($decrypted, true, 512, \JSON_THROW_ON_ERROR);
 
             $refreshTokenId = $data['refresh_token_id'] ?? '';
-            $userId = $data['user_id'] ?? '';
+            $userIdentifier = $data['user_id'] ?? '';
 
-            if (!$refreshTokenId || !$userId) {
+            if (!$refreshTokenId || !$userIdentifier) {
                 $this->logger->warning('Refresh token reuse detection: missing token id or user id in decrypted token');
                 return;
             }
 
-            // Ensure userId is string for consistency
-            $userId = (string) $userId;
+            $user = $this->userRepository->findByEmail($userIdentifier);
+            if (!$user) {
+                $this->logger->warning('Refresh token reuse detection: user not found for identifier '.$userIdentifier);
+                return;
+            }
+
+            $userId = $user->getId();
 
             // If token was revoked via session endpoint (not rotation reuse), skip revokeAll
             $recentRevoke = $this->securityEventRepository->findRecentRevokedByUserAndReason($userId, 'session_revoke');
@@ -84,12 +92,8 @@ final class RefreshTokenReuseSubscriber implements EventSubscriberInterface
             $securityEvent = SecurityEvent::tokenReuseDetected($userId, $ip, $userAgent);
             $this->securityEventRepository->save($securityEvent);
 
-            // Revoke all tokens for user (fire-and-forget)
             $this->tokenRevocationService->revokeAllForUser($userId);
-
-            // Note: We do not rethrow the exception; the original response (invalid_grant) is sent to client.
         } catch (\Throwable $e) {
-            // Log decryption or other errors but do not block the response
             $this->logger->warning('Refresh token reuse detection failed: '.$e->getMessage());
         }
     }
