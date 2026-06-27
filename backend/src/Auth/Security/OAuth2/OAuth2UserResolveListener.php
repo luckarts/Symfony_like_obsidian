@@ -30,6 +30,8 @@ class OAuth2UserResolveListener
         private readonly SecurityEventRepositoryInterface $securityEventRepository,
         private readonly RequestStack $requestStack,
         private readonly LoginThrottleGuard $loginThrottleGuard,
+        #[Autowire(param: 'app.require_email_verification')]
+        private readonly bool $requireEmailVerification = false,
     ) {
     }
 
@@ -93,6 +95,21 @@ class OAuth2UserResolveListener
             ]);
             $this->securityEventRepository->save(
                 SecurityEvent::loginFailed('bad_password', $identifier, $ip, $userAgent, $securityUser->getUser()->getId()),
+            );
+
+            return;
+        }
+
+        if ($this->requireEmailVerification && !$securityUser->getUser()->isVerified()) {
+            $this->securityLogger->warning('login_failed', [
+                'reason' => 'email_not_verified',
+                'userId' => $securityUser->getUser()->getId(),
+                'emailAttempted' => $identifier,
+                'ip' => $ip,
+                'userAgent' => $userAgent,
+            ]);
+            $this->securityEventRepository->save(
+                SecurityEvent::loginFailed('email_not_verified', $identifier, $ip, $userAgent, $securityUser->getUser()->getId()),
             );
 
             return;
