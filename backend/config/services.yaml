@@ -62,3 +62,7 @@ services:
     App\Auth\Infrastructure\Symfony\EventListener\RefreshTokenReuseSubscriber:
         bind:
             $encryptionKey: '%env(OAUTH_ENCRYPTION_KEY)%'
+
+    # OpenApiDecorator: add security schemes and token endpoint to OpenAPI document
+    App\Shared\Infrastructure\OpenApi\OpenApiDecorator:
+        decorates: api_platform.openapi.factory

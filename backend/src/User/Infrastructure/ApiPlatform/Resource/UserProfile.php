@@ -7,6 +7,7 @@ namespace App\User\Infrastructure\ApiPlatform\Resource;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Put;
+use ApiPlatform\OpenApi\Model\Operation;
 use App\User\Domain\Entity\User;
 use App\User\Infrastructure\ApiPlatform\State\Provider\ProfileProvider;
 use App\User\Infrastructure\ApiPlatform\State\Processor\UpdateProfileProcessor;
@@ -18,11 +19,13 @@ use App\User\Infrastructure\ApiPlatform\State\Processor\UpdateProfileProcessor;
             new Get(
                 uriTemplate: "/users/{id}",
                 provider: ProfileProvider::class,
+                openapi: new Operation(security: [['BearerAuth' => []]]),
             ),
             new Put(
                 uriTemplate: "/users/{id}/profile",
                 provider: ProfileProvider::class,
                 processor: UpdateProfileProcessor::class,
+                openapi: new Operation(security: [['BearerAuth' => []]]),
             ),
         ],
         routePrefix: "/api",
