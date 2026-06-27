@@ -1,0 +1,8 @@
+framework:
+    lock:
+        default: flock
+
+when@test:
+    framework:
+        lock:
+            default: flock

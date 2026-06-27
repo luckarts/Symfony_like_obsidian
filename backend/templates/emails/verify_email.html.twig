@@ -1,0 +1,17 @@
+<h1>Confirm your email address</h1>
+
+<p>
+    Thank you for registering! Please confirm your email address by clicking the link below:
+</p>
+
+<p>
+    <a href="{{ signedUrl|raw }}">Confirm my email</a>
+</p>
+
+<p>
+    This link will expire in {{ expiresAt|date('g') }} hour(s).
+</p>
+
+<p>
+    If you did not create an account, no further action is required.
+</p>

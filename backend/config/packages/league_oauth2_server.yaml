@@ -19,7 +19,7 @@ league_oauth2_server:
 when@test:
     league_oauth2_server:
         authorization_server:
-            access_token_ttl: PT1S
+            access_token_ttl: PT1H
         persistence:
-            in_memory: true
+            doctrine: ~
 

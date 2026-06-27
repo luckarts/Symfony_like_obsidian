@@ -4,6 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    app.require_email_verification: '%env(bool:REQUIRE_EMAIL_VERIFICATION)%'
 
 services:
     # default configuration for services in *this* file
@@ -19,11 +20,17 @@ services:
     App\Auth\:
         resource: '../src/Auth/'
 
+    # --- Email Bounded Context ---
+    App\Email\:
+        resource: '../src/Email/'
+
     # --- User Bounded Context ---
     App\User\:
         resource: '../src/User/'
         exclude:
             - '../src/User/Domain/Entity/'
+            - '../src/User/Infrastructure/Doctrine/ResetPasswordRequest.php'
+            - '../src/User/Infrastructure/Security/SecurityUser.php'
 
     # --- Contract bindings (interface → implementation) ---
     App\User\Domain\Contract\UserRepositoryInterface:
@@ -31,3 +38,31 @@ services:
 
     App\User\Domain\Contract\PasswordHasherInterface:
         alias: App\User\Infrastructure\Security\SymfonyPasswordHasher
+
+    App\User\Domain\Contract\PasswordResetRequestRepositoryInterface:
+        alias: App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository
+
+    App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository:
+        autowire: true
+        autoconfigure: true
+
+    App\Shared\Infrastructure\Doctrine\DomainEventDispatchListener:
+        tags:
+            - { name: doctrine.event_listener, event: postFlush }
+
+    # --- Auth contract bindings ---
+    App\Auth\Domain\Contract\SecurityEventRepositoryInterface:
+        alias: App\Auth\Infrastructure\Doctrine\DoctrineSecurityEventRepository
+
+    App\User\Application\MessageHandler\SendPasswordResetEmailHandler:
+        bind:
+            $frontendUrl: '%env(FRONTEND_URL)%'
+
+    # Override the RefreshTokenReuseSubscriber to set the encryption key via bind
+    App\Auth\Infrastructure\Symfony\EventListener\RefreshTokenReuseSubscriber:
+        bind:
+            $encryptionKey: '%env(OAUTH_ENCRYPTION_KEY)%'
+
+    # OpenApiDecorator: add security schemes and token endpoint to OpenAPI document
+    App\Shared\Infrastructure\OpenApi\OpenApiDecorator:
+        decorates: api_platform.openapi.factory
