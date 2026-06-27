@@ -155,6 +155,36 @@ class SecurityEvent
         );
     }
 
+    public static function passwordResetRequested(
+        string $userId,
+        ?string $ip,
+        ?string $userAgent,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::PASSWORD_RESET_REQUESTED,
+            userId: $userId,
+            emailAttempted: null,
+            reason: null,
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
+    public static function passwordResetCompleted(
+        string $userId,
+        ?string $ip,
+        ?string $userAgent,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::PASSWORD_RESET_COMPLETED,
+            userId: $userId,
+            emailAttempted: null,
+            reason: null,
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
     public function getId(): string
     {
         return $this->id;

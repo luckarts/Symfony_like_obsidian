@@ -23,4 +23,14 @@ class SecurityEventTypeTest extends TestCase
     {
         self::assertSame('token_revoked', SecurityEventType::TOKEN_REVOKED->value);
     }
+
+    public function testPasswordResetRequestedCaseExists(): void
+    {
+        self::assertSame('password_reset_requested', SecurityEventType::PASSWORD_RESET_REQUESTED->value);
+    }
+
+    public function testPasswordResetCompletedCaseExists(): void
+    {
+        self::assertSame('password_reset_completed', SecurityEventType::PASSWORD_RESET_COMPLETED->value);
+    }
 }

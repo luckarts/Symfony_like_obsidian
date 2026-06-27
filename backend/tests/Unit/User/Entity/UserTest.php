@@ -35,6 +35,21 @@ class UserTest extends TestCase
     }
 
     #[Test]
+    public function set_password_updates_password(): void
+    {
+        $user = User::register(
+            email: 'john@example.com',
+            hashedPassword: 'old_hash',
+            firstName: 'John',
+            lastName: 'Doe',
+        );
+
+        $user->setPassword('new_hash');
+
+        $this->assertSame('new_hash', $user->getPassword());
+    }
+
+    #[Test]
     public function pull_domain_events_clears_recorded_events(): void
     {
         $user = User::register(

@@ -38,6 +38,9 @@ services:
     App\User\Domain\Contract\PasswordHasherInterface:
         alias: App\User\Infrastructure\Security\SymfonyPasswordHasher
 
+    App\User\Domain\Contract\PasswordResetRequestRepositoryInterface:
+        alias: App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository
+
     App\User\Infrastructure\Doctrine\ResetPasswordRequestRepository:
         autowire: true
         autoconfigure: true
@@ -49,6 +52,10 @@ services:
     # --- Auth contract bindings ---
     App\Auth\Domain\Contract\SecurityEventRepositoryInterface:
         alias: App\Auth\Infrastructure\Doctrine\DoctrineSecurityEventRepository
+
+    App\User\Application\MessageHandler\SendPasswordResetEmailHandler:
+        bind:
+            $frontendUrl: '%env(FRONTEND_URL)%'
 
     # Override the RefreshTokenReuseSubscriber to set the encryption key via bind
     App\Auth\Infrastructure\Symfony\EventListener\RefreshTokenReuseSubscriber:
