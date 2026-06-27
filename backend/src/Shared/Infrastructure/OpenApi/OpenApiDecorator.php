@@ -14,6 +14,7 @@ use ApiPlatform\OpenApi\Model\RequestBody;
 use ApiPlatform\OpenApi\Model\Response;
 use ApiPlatform\OpenApi\Model\SecurityScheme;
 use ApiPlatform\OpenApi\OpenApi;
+
 final class OpenApiDecorator implements OpenApiFactoryInterface
 {
     public function __construct(

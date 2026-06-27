@@ -6,6 +6,7 @@ namespace App\Auth\Infrastructure\ApiPlatform\Resource;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\OpenApi\Model\Operation;
 use App\Auth\Domain\Entity\SecurityEvent;
 use App\Auth\Domain\Enum\SecurityEventType;
 use App\Auth\Infrastructure\ApiPlatform\State\Provider\SecurityEventsProvider;
@@ -17,6 +18,7 @@ use App\Auth\Infrastructure\ApiPlatform\State\Provider\SecurityEventsProvider;
             new GetCollection(
                 uriTemplate: "/v1/security/events",
                 provider: SecurityEventsProvider::class,
+                openapi: new Operation(security: [['BearerAuth' => []]]),
             ),
         ],
         routePrefix: "/api",
