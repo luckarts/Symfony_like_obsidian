@@ -239,6 +239,70 @@ class OAuth2UserResolveListenerTest extends TestCase
         }
     }
 
+    #[Test]
+    public function unverified_user_blocks_login_when_email_verification_required(): void
+    {
+        $user = User::register('unverified@example.com', 'hashed', 'Jane', 'Doe');
+        $securityUser = new SecurityUser($user);
+        $username = 'unverified@example.com';
+
+        $requestStack = new RequestStack();
+        $requestStack->push(Request::create('/oauth2/token', 'POST', server: [
+            'REMOTE_ADDR' => '203.0.113.7',
+            'HTTP_USER_AGENT' => 'PHPUnit-Agent',
+        ]));
+
+        $listener = new OAuth2UserResolveListener(
+            $this->userProvider,
+            $this->passwordHasher,
+            $this->securityLogger,
+            $this->securityEventRepository,
+            $requestStack,
+            $this->loginThrottleGuard,
+            requireEmailVerification: true,
+        );
+
+        $this->loginThrottleGuard->method('assertNotLocked');
+        $this->userProvider->method('loadUserByIdentifier')->willReturn($securityUser);
+        $this->passwordHasher->method('isPasswordValid')->willReturn(true);
+
+        $this->loginThrottleGuard->expects($this->never())->method('recordSuccess');
+
+        $this->securityLogger
+            ->expects($this->once())
+            ->method('warning')
+            ->with('login_failed', $this->callback(fn (array $ctx) => 'email_not_verified' === $ctx['reason'] && $user->getId() === $ctx['userId'] && $username === $ctx['emailAttempted']));
+
+        $this->securityEventRepository
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->callback(fn (SecurityEvent $e) => SecurityEventType::LOGIN_FAILED === $e->getEventType() && 'email_not_verified' === $e->getReason() && $user->getId() === $e->getUserId()));
+
+        $event = $this->makeEvent($username, 'correct-password');
+        $listener->__invoke($event);
+
+        $this->assertNull($event->getUser());
+    }
+
+    #[Test]
+    public function unverified_user_can_login_when_email_verification_not_required(): void
+    {
+        $user = User::register('unverified@example.com', 'hashed', 'Jane', 'Doe');
+        $securityUser = new SecurityUser($user);
+
+        $this->loginThrottleGuard->method('assertNotLocked');
+        $this->userProvider->method('loadUserByIdentifier')->willReturn($securityUser);
+        $this->passwordHasher->method('isPasswordValid')->willReturn(true);
+        $this->loginThrottleGuard->method('recordSuccess');
+        $this->securityLogger->method('info');
+        $this->securityEventRepository->method('save');
+
+        $event = $this->makeEvent('unverified@example.com', 'correct-password');
+        $this->listener->__invoke($event);
+
+        $this->assertSame($securityUser, $event->getUser());
+    }
+
     private function makeEvent(string $username, string $password): UserResolveEvent
     {
         return new UserResolveEvent(
