@@ -29,7 +29,7 @@ class SecurityEvent
     #[ORM\Column(type: 'string', length: 180, nullable: true)]
     private ?string $emailAttempted;
 
-    #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $reason;
 
     #[ORM\Column(type: 'string', length: 45, nullable: true)]
