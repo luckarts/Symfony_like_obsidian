@@ -10,10 +10,8 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation;
 use App\User\Domain\Entity\User;
-use App\User\Infrastructure\ApiPlatform\State\Processor\BanUserProcessor;
 use App\User\Infrastructure\ApiPlatform\State\Processor\ChangeUserRoleProcessor;
 use App\User\Infrastructure\ApiPlatform\State\Provider\AdminUsersProvider;
-use App\User\Infrastructure\ApiPlatform\Resource\BanUserRequest;
 use App\User\Infrastructure\ApiPlatform\Resource\ChangeUserRoleRequest;
 
 #[
@@ -37,19 +35,7 @@ use App\User\Infrastructure\ApiPlatform\Resource\ChangeUserRoleRequest;
                 security: "is_granted('ROLE_ADMIN')",
                 openapi: new Operation(security: [['BearerAuth' => []]]),
             ),
-            new Post(
-                uriTemplate: "/v1/admin/users/{id}/ban",
-                processor: BanUserProcessor::class,
-                input: BanUserRequest::class,
-                inputFormats: ['json' => ['application/json']],
-                read: false,
-                deserialize: true,
-                status: 204,
-                security: "is_granted('ROLE_ADMIN')",
-                openapi: new Operation(security: [['BearerAuth' => []]]),
-            ),
         ],
-        routePrefix: "/api",
         paginationItemsPerPage: 20,
         paginationMaximumItemsPerPage: 100,
         paginationClientItemsPerPage: true,
@@ -70,8 +56,6 @@ class AdminUserResource
 
     public string $createdAt;
 
-    public bool $isBanned;
-
     public static function fromEntity(User $user): self
     {
         $resource = new self();
@@ -81,8 +65,6 @@ class AdminUserResource
         $resource->roles = $user->getRoles();
         $resource->isVerified = $user->isVerified();
         $resource->createdAt = $user->getCreatedAt()->format(\DateTimeInterface::ATOM);
-        $resource->isBanned = $user->isBanned();
-
         return $resource;
     }
 }

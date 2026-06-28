@@ -170,6 +170,22 @@ class SecurityEvent
         );
     }
 
+    public static function roleChanged(
+        string $userId,
+        string $reason,
+        ?string $ip,
+        ?string $userAgent,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::ROLE_CHANGED,
+            userId: $userId,
+            emailAttempted: null,
+            reason: $reason,
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
     public static function passwordResetCompleted(
         string $userId,
         ?string $ip,

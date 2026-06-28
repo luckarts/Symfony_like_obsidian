@@ -10,6 +10,3 @@ api_platform:
         App\User\Domain\Exception\UserAlreadyExistsException: 409
         App\User\Domain\Exception\UserNotFoundException: 404
         App\User\Domain\Exception\InvalidRoleException: 422
-        App\User\Domain\Exception\CannotBanSelfException: 422
-        App\User\Domain\Exception\UserAlreadyBannedException: 409
-        App\User\Domain\Exception\UserNotBannedException: 409
