@@ -114,6 +114,12 @@ class User implements PasswordAuthenticatedUserInterface, HasDomainEventsInterfa
         return $roles;
     }
 
+    /** @param list<string> $roles */
+    public function setRoles(array $roles): void
+    {
+        $this->roles = $roles;
+    }
+
     public function getFirstName(): string
     {
         return $this->firstName;
