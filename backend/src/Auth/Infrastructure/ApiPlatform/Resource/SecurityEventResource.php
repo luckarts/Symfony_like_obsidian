@@ -9,8 +9,8 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\OpenApi\Model\Operation;
 use App\Auth\Domain\Entity\SecurityEvent;
 use App\Auth\Domain\Enum\SecurityEventType;
+use App\Auth\Infrastructure\ApiPlatform\State\Provider\AdminSecurityEventsProvider;
 use App\Auth\Infrastructure\ApiPlatform\State\Provider\SecurityEventsProvider;
-
 #[
     ApiResource(
         shortName: "SecurityEvent",
@@ -18,6 +18,12 @@ use App\Auth\Infrastructure\ApiPlatform\State\Provider\SecurityEventsProvider;
             new GetCollection(
                 uriTemplate: "/v1/security/events",
                 provider: SecurityEventsProvider::class,
+                openapi: new Operation(security: [['BearerAuth' => []]]),
+            ),
+            new GetCollection(
+                uriTemplate: "/v1/admin/security/events",
+                provider: AdminSecurityEventsProvider::class,
+                security: "is_granted('ROLE_ADMIN')",
                 openapi: new Operation(security: [['BearerAuth' => []]]),
             ),
         ],

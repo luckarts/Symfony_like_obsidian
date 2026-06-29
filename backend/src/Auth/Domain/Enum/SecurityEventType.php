@@ -14,4 +14,5 @@ enum SecurityEventType: string
     case TOKEN_REVOKED = 'token_revoked';
     case PASSWORD_RESET_REQUESTED = 'password_reset_requested';
     case PASSWORD_RESET_COMPLETED = 'password_reset_completed';
+    case ROLE_CHANGED = 'role_changed';
 }

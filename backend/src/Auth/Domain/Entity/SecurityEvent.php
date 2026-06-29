@@ -29,7 +29,7 @@ class SecurityEvent
     #[ORM\Column(type: 'string', length: 180, nullable: true)]
     private ?string $emailAttempted;
 
-    #[ORM\Column(type: 'string', length: 32, nullable: true)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $reason;
 
     #[ORM\Column(type: 'string', length: 45, nullable: true)]
@@ -165,6 +165,22 @@ class SecurityEvent
             userId: $userId,
             emailAttempted: null,
             reason: null,
+            ip: $ip,
+            userAgent: $userAgent,
+        );
+    }
+
+    public static function roleChanged(
+        string $userId,
+        string $reason,
+        ?string $ip,
+        ?string $userAgent,
+    ): self {
+        return new self(
+            eventType: SecurityEventType::ROLE_CHANGED,
+            userId: $userId,
+            emailAttempted: null,
+            reason: $reason,
             ip: $ip,
             userAgent: $userAgent,
         );

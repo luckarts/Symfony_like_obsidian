@@ -12,6 +12,8 @@ interface SecurityEventRepositoryInterface
 
     public function findByUserId(string $userId, int $page = 1, int $limit = 20): SecurityEventCollection;
 
+    public function findAllPaginated(int $page = 1, int $limit = 20): SecurityEventCollection;
+
     /**
      * Find the most recent TOKEN_REVOKED event for a user with a given reason.
      */

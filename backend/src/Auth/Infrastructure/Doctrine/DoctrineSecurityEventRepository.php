@@ -50,6 +50,24 @@ class DoctrineSecurityEventRepository extends ServiceEntityRepository implements
         );
     }
 
+    public function findAllPaginated(int $page = 1, int $limit = 20): SecurityEventCollection
+    {
+        $query = $this->createQueryBuilder('e')
+            ->orderBy('e.createdAt', 'DESC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit)
+            ->getQuery();
+
+        $paginator = new Paginator($query);
+
+        return new SecurityEventCollection(
+            items: iterator_to_array($paginator),
+            totalItems: (int) $paginator->count(),
+            currentPage: $page,
+            itemsPerPage: $limit,
+        );
+    }
+
     public function findRecentRevokedByUserAndReason(string $userId, string $reason): ?SecurityEvent
     {
         return $this->createQueryBuilder('e')
