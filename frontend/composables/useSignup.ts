@@ -1,15 +1,18 @@
+import { signupService } from '~/services/auth'
+import type { SignupPayload } from '~/types/auth'
+
 export function useSignup() {
+  const store = useAuthStore()
   const loading = ref(false)
   const error = ref<string | null>(null)
 
-  async function signup(payload: { name: string; email: string; password: string }) {
+  async function signup(payload: SignupPayload) {
     loading.value = true
     error.value = null
     try {
-      await $fetch('/api/register', {
-        method: 'POST',
-        body: payload,
-      })
+      const data = await signupService(payload)
+      store.setToken(data.token)
+      store.setUser(data.user)
       await navigateTo('/')
     } catch (err: unknown) {
       const status = (err as { statusCode?: number })?.statusCode

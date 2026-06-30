@@ -1,108 +1,137 @@
 <script setup lang="ts">
+import { useField } from "~/composables/useField";
+import { required } from "~/utils/validators";
+
 defineProps<{
-  loading: boolean
-  error: string | null
-}>()
+    loading: boolean;
+}>();
 
 const emit = defineEmits<{
-  submit: [{ name: string; email: string; password: string }]
-}>()
+    submit: [
+        {
+            firstName: string;
+            lastName: string;
+            email: string;
+            password: string;
+        },
+    ];
+}>();
 
-const name = ref('')
-const email = ref('')
-const password = ref('')
+const {
+    value: firstName,
+    errorMessage: firstNameError,
+    handleBlur: touchFirstName,
+    validate: validateFirstName,
+} = useField<string>("", [required("Le prénom est requis")]);
 
-const errors = reactive({ name: '', email: '', password: '' })
+const {
+    value: lastName,
+    errorMessage: lastNameError,
+    handleBlur: touchLastName,
+    validate: validateLastName,
+} = useField<string>("", [required("Le nom est requis")]);
 
-function validate(): boolean {
-  errors.name = ''
-  errors.email = ''
-  errors.password = ''
+const {
+    value: email,
+    errorMessage: emailError,
+    handleBlur: touchEmail,
+    validate: validateEmail,
+} = useField<string>("", [required("L'email est requis")]);
 
-  let valid = true
-
-  if (!name.value.trim()) {
-    errors.name = 'Le nom est requis'
-    valid = false
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-    errors.email = 'Adresse email invalide'
-    valid = false
-  }
-
-  if (password.value.length < 8) {
-    errors.password = 'Le mot de passe doit contenir au moins 8 caractères'
-    valid = false
-  }
-
-  return valid
-}
+const {
+    value: password,
+    errorMessage: passwordError,
+    handleBlur: touchPassword,
+    validate: validatePassword,
+} = useField<string>("", [required("Le mot de passe est requis")]);
 
 function handleSubmit() {
-  if (validate()) {
-    emit('submit', { name: name.value, email: email.value, password: password.value })
-  }
+    const valid = [
+        validateFirstName,
+        validateLastName,
+        validateEmail,
+        validatePassword,
+    ].every((fn) => fn());
+    if (valid) {
+        emit("submit", {
+            firstName: firstName.value as string,
+            lastName: lastName.value as string,
+            email: email.value as string,
+            password: password.value as string,
+        });
+    }
 }
 </script>
 
 <template>
-  <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-sm space-y-5">
-    <div class="flex flex-col items-center gap-3">
-      <AppLogo size="md" />
-      <h1 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Créer un compte
-      </h1>
-    </div>
+    <Card variant="shadow" class="w-full max-w-sm">
+        <div class="flex flex-col items-center gap-3">
+            <AppLogo size="md" />
+            <Heading :level="1" size="lg">Créer un compte</Heading>
+        </div>
 
-    <form class="space-y-4" @submit.prevent="handleSubmit">
-      <Input
-        v-model="name"
-        type="text"
-        name="name"
-        label="Nom complet"
-        placeholder="Jean Dupont"
-        :error="errors.name"
-        :disabled="loading"
-      />
+        <form class="space-y-4" novalidate @submit.prevent="handleSubmit">
+            <div class="flex gap-3">
+                <Input
+                    v-model="firstName"
+                    type="text"
+                    name="firstName"
+                    label="Prénom"
+                    placeholder="Jean"
+                    :error="firstNameError"
+                    :disabled="loading"
+                    class="w-[35%]"
+                    @blur="touchFirstName()"
+                />
 
-      <Input
-        v-model="email"
-        type="email"
-        name="email"
-        label="Email"
-        placeholder="jean@exemple.com"
-        :error="errors.email"
-        :disabled="loading"
-      />
+                <Input
+                    v-model="lastName"
+                    type="text"
+                    name="lastName"
+                    label="Nom"
+                    placeholder="Dupont"
+                    :error="lastNameError"
+                    :disabled="loading"
+                    class="w-[61%]"
+                    @blur="touchLastName()"
+                />
+            </div>
 
-      <Input
-        v-model="password"
-        type="password"
-        name="password"
-        label="Mot de passe"
-        placeholder="8 caractères minimum"
-        :error="errors.password"
-        :disabled="loading"
-      />
+            <Input
+                v-model="email"
+                type="email"
+                name="email"
+                label="Email"
+                placeholder="jean@exemple.com"
+                :error="emailError"
+                :disabled="loading"
+                @blur="touchEmail()"
+            />
 
-      <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
+            <Input
+                v-model="password"
+                type="password"
+                name="password"
+                label="Mot de passe"
+                placeholder="8 caractères minimum"
+                :error="passwordError"
+                :disabled="loading"
+                @blur="touchPassword()"
+            />
 
-      <Button
-        type="submit"
-        variant="primary"
-        full-width
-        :loading="loading"
-      >
-        Créer mon compte
-      </Button>
-    </form>
+            <Button
+                type="submit"
+                variant="primary"
+                full-width
+                :loading="loading"
+            >
+                Créer mon compte
+            </Button>
+        </form>
 
-    <p class="text-center text-sm text-gray-500">
-      Déjà un compte ?
-      <NuxtLink to="/auth/login" class="font-medium text-brand-500 hover:underline">
-        Se connecter
-      </NuxtLink>
-    </p>
-  </div>
+        <Text as="p" class="text-center">
+            Déjà un compte ?
+            <AppLink variant="brand" to="/auth/login">Se connecter</AppLink>
+        </Text>
+    </Card>
 </template>
