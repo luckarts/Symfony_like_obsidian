@@ -13,6 +13,9 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        oauth_token:
+            pattern: ^/oauth2/token
+            security: false
         main:
             lazy: true
             stateless: true
@@ -20,6 +23,8 @@ security:
             oauth2: true
 
     access_control:
+        - { path: ^/oauth2/token, roles: PUBLIC_ACCESS }
+        - { path: ^/oauth2/authorize, roles: PUBLIC_ACCESS }
         - { path: ^/api/email/verify, roles: PUBLIC_ACCESS }
         - { path: ^/api/email/resend-verification, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/auth/password-reset, roles: PUBLIC_ACCESS }
