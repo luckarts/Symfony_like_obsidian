@@ -1,0 +1,21 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/packages/shared/node_modules
+      - /app/packages/config/node_modules
+    environment:
+      NODE_ENV: development
+      API_URL: ${API_URL:-http://backend:80}
+      AUTH_URL: http://localhost:3000
+      AUTH_SECRET: ${AUTH_SECRET}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET}
+    command: pnpm --filter @repo/web dev --port 3000
