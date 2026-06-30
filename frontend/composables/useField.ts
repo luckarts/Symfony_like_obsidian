@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { type Ref, ref } from 'vue'
 import type { SimpleRule } from '~/utils/validators'
 import { validate as runValidation } from '~/utils/validators'
 

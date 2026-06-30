@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
+import { useI18n } from 'vue-i18n'
 
-const colorMode = useColorMode();
-const { t } = useI18n();
+const colorMode = useColorMode()
+const { t } = useI18n()
 
-const isDark = computed(() => colorMode.value === "dark");
+const isDark = computed(() => colorMode.value === 'dark')
 
 function toggleTheme() {
-    colorMode.preference = isDark.value ? "light" : "dark";
+  colorMode.preference = isDark.value ? 'light' : 'dark'
 }
 </script>
 

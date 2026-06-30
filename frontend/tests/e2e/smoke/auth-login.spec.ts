@@ -58,7 +58,9 @@ test.describe('@smoke Login', () => {
     await page.getByLabel('Email').fill('user@test.com')
     await page.getByLabel('Mot de passe').fill('password123')
     await page.getByRole('button', { name: 'Se connecter' }).click()
-    await expect(page.getByRole('alert').filter({ hasText: 'Content de vous revoir' })).toBeVisible()
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'Content de vous revoir' })
+    ).toBeVisible()
     await expect(page).toHaveURL('/')
   })
 

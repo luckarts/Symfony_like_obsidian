@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { useAuthStore } from "~/stores/auth";
+import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({
-    middleware: "auth",
-    layout: "default",
-});
+  middleware: 'auth',
+  layout: 'default',
+})
 
-const authStore = useAuthStore();
+const authStore = useAuthStore()
 
 useHead({
-    title: "Accueil",
-});
+  title: 'Accueil',
+})
 </script>
 
 <template>
