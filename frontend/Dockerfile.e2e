@@ -1,0 +1,24 @@
+# Dockerfile pour l'environnement E2E Nuxt
+FROM node:20-alpine
+
+# Installer wget pour le healthcheck et pnpm globalement
+RUN apk add --no-cache wget && \
+    npm install -g pnpm@10
+
+# Créer le répertoire de travail
+WORKDIR /app
+
+# Copier l'entrypoint script
+COPY docker-entrypoint-e2e.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint-e2e.sh
+
+# Exposer le port 3000 pour Nuxt
+EXPOSE 3000
+
+# Variables d'environnement par défaut (peuvent être overridées par docker-compose)
+ENV NODE_ENV=development
+ENV NITRO_HOST=0.0.0.0
+ENV NITRO_PORT=3000
+
+# Utiliser l'entrypoint qui installe les dépendances au démarrage
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint-e2e.sh"]

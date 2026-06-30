@@ -10,6 +10,5 @@ php bin/console doctrine:migrations:migrate --no-interaction
 
 echo "🔑 OAuth2 client..."
 php bin/console app:oauth:setup-client --no-interaction
-
 echo "🚀 Démarrage Symfony sur 0.0.0.0:8000..."
 exec php -S 0.0.0.0:8000 -t public/
