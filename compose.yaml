@@ -1,0 +1,77 @@
+services:
+  database:
+    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    container_name: app-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - database_data:/var/lib/postgresql/data:rw
+    networks:
+      - app-network
+
+  mailer:
+    image: axllent/mailpit
+    ports:
+      - "1025"
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: app-backend
+    ports:
+      - "8000:80"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=16&charset=utf8
+      APP_ENV: ${APP_ENV:-prod}
+      APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
+      MAILER_DSN: smtp://mailer:1025
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY}
+      OAUTH_PUBLIC_KEY: /app/config/jwt/public.pem
+      OAUTH_PRIVATE_KEY: /app/config/jwt/private.pem
+      OAUTH_PASSPHRASE: ""
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: app-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      API_URL: ${API_URL:-http://backend:80}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://backend:80}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
+      OAUTH_CLIENT_ID: ${OAUTH_CLIENT_ID:?OAUTH_CLIENT_ID is required}
+      OAUTH_CLIENT_SECRET: ${OAUTH_CLIENT_SECRET:?OAUTH_CLIENT_SECRET is required}
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  database_data:
+
+networks:
+  app-network:
+    driver: bridge
