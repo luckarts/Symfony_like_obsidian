@@ -1,6 +1,11 @@
 <script setup lang="ts">
+<<<<<<< HEAD
 import { useField } from "~/composables/useField";
 import { required } from "~/utils/validators";
+=======
+import { useField } from '~/composables/useField'
+import { email as emailRule, min, required } from '~/utils/validators'
+>>>>>>> 808b346 (fixup! feat(auth): add login page with LoginCard component)
 
 defineProps<{
     loading: boolean;
@@ -18,6 +23,7 @@ const emit = defineEmits<{
 }>();
 
 const {
+<<<<<<< HEAD
     value: firstName,
     errorMessage: firstNameError,
     handleBlur: touchFirstName,
@@ -44,6 +50,34 @@ const {
     handleBlur: touchPassword,
     validate: validatePassword,
 } = useField<string>("", [required("Le mot de passe est requis")]);
+=======
+  value: firstName,
+  errorMessage: firstNameError,
+  handleBlur: touchFirstName,
+  validate: validateFirstName,
+} = useField<string>('', [required()])
+
+const {
+  value: lastName,
+  errorMessage: lastNameError,
+  handleBlur: touchLastName,
+  validate: validateLastName,
+} = useField<string>('', [required()])
+
+const {
+  value: email,
+  errorMessage: emailError,
+  handleBlur: touchEmail,
+  validate: validateEmail,
+} = useField<string>('', [required(), emailRule('Adresse email invalide')])
+
+const {
+  value: password,
+  errorMessage: passwordError,
+  handleBlur: touchPassword,
+  validate: validatePassword,
+} = useField<string>('', [required(), min(8, 'au moins 8 caractères')])
+>>>>>>> 808b346 (fixup! feat(auth): add login page with LoginCard component)
 
 function handleSubmit() {
     const valid = [
@@ -64,19 +98,11 @@ function handleSubmit() {
 </script>
 
 <template>
-<<<<<<< HEAD
     <Card variant="shadow" class="w-full max-w-sm">
         <div class="flex flex-col items-center gap-3">
             <AppLogo size="md" />
-            <Heading as="h1">Créer un compte</Heading>
+            <Heading :level="1" size="lg">Créer un compte</Heading>
         </div>
-=======
-  <Card variant="shadow" class="w-full max-w-sm">
-    <div class="flex flex-col items-center gap-3">
-      <AppLogo size="md" />
-      <Heading :level="1" size="lg">Créer un compte</Heading>
-    </div>
->>>>>>> e668acb (feat(ui): add Heading atom, use it in SignupCard)
 
         <form class="space-y-4" novalidate @submit.prevent="handleSubmit">
             <div class="flex gap-3">

@@ -7,7 +7,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
       POSTGRES_USER: ${POSTGRES_USER:-app}
     healthcheck:
-      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-d",
+          "${POSTGRES_DB:-app}",
+          "-U",
+          "${POSTGRES_USER:-app}",
+        ]
       timeout: 5s
       retries: 5
       start_period: 60s
@@ -39,6 +47,10 @@ services:
       APP_ENV: ${APP_ENV:-prod}
       APP_SECRET: ${APP_SECRET:?APP_SECRET is required}
       MAILER_DSN: smtp://mailer:1025
+      OAUTH_ENCRYPTION_KEY: ${OAUTH_ENCRYPTION_KEY}
+      OAUTH_PUBLIC_KEY: /app/config/jwt/public.pem
+      OAUTH_PRIVATE_KEY: /app/config/jwt/private.pem
+      OAUTH_PASSPHRASE: ""
     depends_on:
       database:
         condition: service_healthy

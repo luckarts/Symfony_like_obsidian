@@ -47,6 +47,8 @@ export default defineNuxtConfig({
     // Public (client + serveur)
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '',
+      oauthClientId: process.env.NUXT_PUBLIC_CLIENT_ID || 'dev_client_id',
+      oauthClientSecret: process.env.NUXT_PUBLIC_CLIENT_SECRET || 'dev_client_secret',
     },
   },
 
@@ -56,6 +58,9 @@ export default defineNuxtConfig({
     '/admin/**': { ssr: false }, // SPA pour admin
     '/api/**': {
       proxy: { to: `${process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000'}/api/**` },
+    },
+    '/oauth2/**': {
+      proxy: { to: `${process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000'}/oauth2/**` },
     },
   },
 
